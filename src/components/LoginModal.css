@@ -1,0 +1,262 @@
+/* SMALLER Modal - Matches Landing Page Colors */
+.simple-login-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.7);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+  padding: 20px;
+  /* backdrop-filter removed - no blur */
+}
+
+/* SMALLER CONTAINER - Purple theme matching landing page */
+.simple-login-container {
+  width: 100%;
+  max-width: 400px;
+  background: linear-gradient(
+    135deg,
+    rgba(88, 28, 135, 0.95) 0%,
+    rgba(49, 19, 91, 0.95) 100%
+  );
+  border-radius: 20px;
+  padding: 35px 30px;
+  box-shadow: 0 20px 60px rgba(168, 85, 247, 0.4);
+  text-align: center;
+  border: 2px solid rgba(168, 85, 247, 0.3);
+  position: relative;
+  overflow: hidden;
+}
+
+/* Glow effect matching landing page */
+.simple-login-container::before {
+  content: "";
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(
+    circle,
+    rgba(168, 85, 247, 0.2) 0%,
+    transparent 70%
+  );
+  z-index: 0;
+}
+
+.simple-login-container > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* Rocket Container */
+.simple-rocket-container {
+  margin-bottom: 20px;
+  height: 60px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.simple-rocket {
+  font-size: 40px;
+  transition: transform 0.05s ease;
+  filter: drop-shadow(0 0 15px rgba(251, 191, 36, 0.6));
+}
+
+/* Header */
+.simple-login-header {
+  margin-bottom: 25px;
+}
+
+.simple-login-header h1 {
+  font-size: 22px;
+  font-weight: 800;
+  color: white;
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  text-shadow: 0 0 20px rgba(168, 85, 247, 0.8);
+}
+
+/* Form */
+.simple-login-form {
+  margin-bottom: 15px;
+}
+
+.simple-form-group {
+  margin-bottom: 18px;
+  text-align: left;
+}
+
+.simple-form-group label {
+  display: block;
+  margin-bottom: 8px;
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.simple-form-group input {
+  width: 100%;
+  padding: 12px 15px;
+  border: 2px solid rgba(168, 85, 247, 0.3);
+  border-radius: 10px;
+  font-size: 14px;
+  transition: all 0.3s;
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+  backdrop-filter: blur(10px);
+}
+
+.simple-form-group input:focus {
+  outline: none;
+  border-color: rgba(168, 85, 247, 0.8);
+  background: rgba(255, 255, 255, 0.15);
+  box-shadow: 0 0 0 3px rgba(168, 85, 247, 0.2);
+}
+
+.simple-form-group input:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.simple-form-group input::placeholder {
+  color: rgba(255, 255, 255, 0.5);
+}
+
+/* Remember me & Forgot password */
+.simple-remember-forgot {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  font-size: 12px;
+}
+
+.simple-remember {
+  display: flex;
+  align-items: center;
+}
+
+.simple-remember input {
+  margin-right: 6px;
+  accent-color: #a855f7;
+  width: 14px;
+  height: 14px;
+}
+
+.simple-remember label {
+  color: rgba(255, 255, 255, 0.8);
+  cursor: pointer;
+  font-size: 12px;
+}
+
+.simple-forgot {
+  background: none;
+  border: none;
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 4px 0;
+  text-decoration: none;
+  transition: all 0.3s;
+}
+
+.simple-forgot:hover {
+  color: white;
+  text-shadow: 0 0 10px rgba(168, 85, 247, 0.8);
+}
+
+.simple-forgot:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Login Button - Matching landing page purple gradient */
+.simple-login-btn {
+  width: 100%;
+  padding: 14px;
+  background: linear-gradient(90deg, #a855f7 0%, #ec4899 100%);
+  color: white;
+  border: none;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  margin-bottom: 15px;
+  transition: all 0.3s;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  box-shadow: 0 4px 15px rgba(168, 85, 247, 0.4);
+}
+
+.simple-login-btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(168, 85, 247, 0.6);
+}
+
+.simple-login-btn:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.simple-login-btn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+/* Create Account */
+.simple-create-account {
+  margin-bottom: 0;
+}
+
+.simple-create-btn {
+  background: none;
+  border: none;
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 8px 0;
+  text-decoration: none;
+  transition: all 0.3s;
+  width: 100%;
+}
+
+.simple-create-btn:hover:not(:disabled) {
+  color: white;
+  text-shadow: 0 0 10px rgba(168, 85, 247, 0.8);
+}
+
+.simple-create-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Responsive - Even smaller on mobile */
+@media (max-width: 480px) {
+  .simple-login-container {
+    padding: 30px 25px;
+    max-width: 350px;
+    margin: 0 10px;
+  }
+
+  .simple-login-header h1 {
+    font-size: 20px;
+  }
+
+  .simple-rocket {
+    font-size: 36px;
+  }
+
+  .simple-form-group input {
+    padding: 11px 13px;
+  }
+}
