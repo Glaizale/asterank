@@ -5,7 +5,6 @@ function LandingPage({ onShowLogin }) {
   const mountRef = useRef(null);
 
   useEffect(() => {
-    // Three.js Scene Setup - PLANETS ONLY
     const scene = new THREE.Scene();
     const camera = new THREE.PerspectiveCamera(75, 600 / 600, 0.1, 1000);
     const renderer = new THREE.WebGLRenderer({
@@ -237,8 +236,7 @@ function LandingPage({ onShowLogin }) {
         </div>
       </div>
 
-      {/* CSS Animations */}
-      <style jsx>{`
+      <style>{`
         @keyframes glow {
           from {
             text-shadow: 0 0 40px rgba(168, 85, 247, 0.8),
@@ -266,6 +264,9 @@ function LandingPage({ onShowLogin }) {
           to {
             opacity: 1;
           }
+        }
+        .animate-fade-in {
+          animation: fadeIn 2s ease-in-out;
         }
       `}</style>
     </div>

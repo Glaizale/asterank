@@ -1,500 +1,362 @@
-import { Moon, Star, Plus } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { useState, useEffect, useRef } from "react";
+import {
+  motion,
+  useScroll,
+  useMotionValue,
+  useTransform,
+  animate,
+} from "framer-motion";
 import * as THREE from "three";
+import AsteroidManager from "./AsteroidManager";
 
-export default function ExploreView({
-  loading,
-  asteroids = [
-    {
-      id: 1,
-      name: "Ceres",
-      date: "2024-01-15",
-      ra: 10.5934,
-      dec: 7.3401,
-      vmag: 6.64,
-    },
-    {
-      id: 2,
-      name: "Vesta",
-      date: "2024-01-16",
-      ra: 15.2341,
-      dec: -5.1234,
-      vmag: 7.2,
-    },
-    {
-      id: 3,
-      name: "Pallas",
-      date: "2024-01-17",
-      ra: 8.9876,
-      dec: 12.4567,
-      vmag: 8.1,
-    },
-    {
-      id: 4,
-      name: "Hygiea",
-      date: "2024-01-18",
-      ra: 20.1234,
-      dec: -8.7654,
-      vmag: 9.5,
-    },
-  ],
-  currentAsteroidIndex = 0,
-  isFavorite = () => false,
-  addToFavorites = () => {},
-  setSelectedAsteroid = () => {},
-}) {
-  const canvasRefs = useRef([]);
-  const scenesRef = useRef([]);
-  const renderersRef = useRef([]);
-  const objectsRef = useRef([]);
-  const [scrollY, setScrollY] = useState(0);
+export default function AsterankStoryExplorer({ user }) {
+  const [showAsteroidManager, setShowAsteroidManager] = useState(false);
+  const [asteroidData, setAsteroidData] = useState(null);
+
+  const containerRef = useRef(null);
+  const canvasRef = useRef(null); // background stars, planet, moon, main asteroid
+  const floatingRef = useRef(null); // original floating asteroids canvas
+
+  /* ===================== SCROLL ===================== */
+  const { scrollY } = useScroll({ container: containerRef });
+  const timeline = useMotionValue(0);
 
   useEffect(() => {
-    const handleScroll = () => {
-      setScrollY(window.scrollY);
-    };
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
+    animate(timeline, 1, { duration: 0.9, ease: "easeOut" });
   }, []);
 
   useEffect(() => {
-    // Create starfield background
-    const createStarfield = (scene) => {
-      const starsGeometry = new THREE.BufferGeometry();
-      const starsMaterial = new THREE.PointsMaterial({
+    return scrollY.on("change", (latest) => {
+      timeline.set(1 + latest / 300);
+    });
+  }, [scrollY]);
+
+  /* ===================== FETCH ASTEROID DATA ===================== */
+  useEffect(() => {
+    fetch("https://www.asterank.com/api/skymorph/search?target=J99TS7A")
+      .then((res) => res.json())
+      .then((data) => setAsteroidData(data[0] || data))
+      .catch(console.error);
+  }, []);
+
+  /* ===================== BACKGROUND SCENE (stars, planet, moon, main asteroid) ===================== */
+  useEffect(() => {
+    if (!canvasRef.current) return;
+
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x000010);
+
+    const camera = new THREE.PerspectiveCamera(
+      75,
+      window.innerWidth / window.innerHeight,
+      0.1,
+      1000
+    );
+    camera.position.z = 40;
+
+    const renderer = new THREE.WebGLRenderer({
+      canvas: canvasRef.current,
+      alpha: true,
+      antialias: true,
+    });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+
+    // -------------------- Stars --------------------
+    const starGeometry = new THREE.BufferGeometry();
+    const starCount = 6000;
+    const starPositions = new Float32Array(starCount * 3);
+    for (let i = 0; i < starCount * 3; i++) {
+      starPositions[i] = (Math.random() - 0.5) * 500;
+    }
+    starGeometry.setAttribute(
+      "position",
+      new THREE.BufferAttribute(starPositions, 3)
+    );
+    const stars = new THREE.Points(
+      starGeometry,
+      new THREE.PointsMaterial({
         color: 0xffffff,
-        size: 0.7,
+        size: 0.25,
         transparent: true,
         opacity: 0.8,
-      });
+      })
+    );
+    scene.add(stars);
 
-      const starsVertices = [];
-      for (let i = 0; i < 3000; i++) {
-        const x = (Math.random() - 0.5) * 2000;
-        const y = (Math.random() - 0.5) * 2000;
-        const z = (Math.random() - 0.5) * 2000;
-        starsVertices.push(x, y, z);
-      }
-
-      starsGeometry.setAttribute(
-        "position",
-        new THREE.Float32BufferAttribute(starsVertices, 3)
-      );
-      const starField = new THREE.Points(starsGeometry, starsMaterial);
-      scene.add(starField);
-      return starField;
-    };
-
-    // Setup scene for each asteroid
-    asteroids.forEach((asteroid, index) => {
-      const canvas = canvasRefs.current[index];
-      if (!canvas) return;
-
-      const scene = new THREE.Scene();
-      scenesRef.current[index] = scene;
-
-      const camera = new THREE.PerspectiveCamera(
-        75,
-        canvas.clientWidth / canvas.clientHeight,
-        0.1,
-        2000
-      );
-      camera.position.z = 15;
-
-      const renderer = new THREE.WebGLRenderer({
-        canvas,
-        alpha: true,
-        antialias: true,
-      });
-      renderer.setSize(canvas.clientWidth, canvas.clientHeight);
-      renderer.setClearColor(0x000000, 0);
-      renderersRef.current[index] = renderer;
-
-      // Add starfield to all scenes
-      createStarfield(scene);
-
-      // Lighting
-      const ambientLight = new THREE.AmbientLight(0xffffff, 0.3);
-      scene.add(ambientLight);
-
-      const pointLight = new THREE.PointLight(0xffffff, 1, 100);
-      pointLight.position.set(10, 10, 10);
-      scene.add(pointLight);
-
-      // Create different objects for each asteroid
-      let mainObject;
-
-      if (index === 0) {
-        // REALISTIC MOON with texture
-        const moonGeometry = new THREE.SphereGeometry(4, 64, 64);
-
-        // Create realistic moon texture procedurally
-        const canvas2d = document.createElement("canvas");
-        canvas2d.width = 1024;
-        canvas2d.height = 1024;
-        const ctx = canvas2d.getContext("2d");
-
-        // Base gray color
-        ctx.fillStyle = "#8a8a8a";
-        ctx.fillRect(0, 0, 1024, 1024);
-
-        // Add craters
-        for (let i = 0; i < 100; i++) {
-          const x = Math.random() * 1024;
-          const y = Math.random() * 1024;
-          const radius = Math.random() * 50 + 10;
-          const gradient = ctx.createRadialGradient(x, y, 0, x, y, radius);
-          gradient.addColorStop(0, "#5a5a5a");
-          gradient.addColorStop(0.7, "#6a6a6a");
-          gradient.addColorStop(1, "#8a8a8a");
-          ctx.fillStyle = gradient;
-          ctx.beginPath();
-          ctx.arc(x, y, radius, 0, Math.PI * 2);
-          ctx.fill();
-        }
-
-        // Add texture noise
-        for (let i = 0; i < 10000; i++) {
-          const x = Math.random() * 1024;
-          const y = Math.random() * 1024;
-          const brightness = Math.random() * 40 + 100;
-          ctx.fillStyle = `rgb(${brightness}, ${brightness}, ${brightness})`;
-          ctx.fillRect(x, y, 1, 1);
-        }
-
-        const moonTexture = new THREE.CanvasTexture(canvas2d);
-        const moonMaterial = new THREE.MeshStandardMaterial({
-          map: moonTexture,
-          roughness: 0.9,
-          metalness: 0.1,
-        });
-
-        mainObject = new THREE.Mesh(moonGeometry, moonMaterial);
-        mainObject.position.set(0, 0, 0);
-        scene.add(mainObject);
-      } else if (index === 1) {
-        // BIG ROCKET
-        const rocketGroup = new THREE.Group();
-
-        // Rocket body (cone)
-        const bodyGeometry = new THREE.CylinderGeometry(0.8, 1.2, 6, 32);
-        const bodyMaterial = new THREE.MeshStandardMaterial({
-          color: 0xeeeeee,
-          metalness: 0.7,
-          roughness: 0.3,
-        });
-        const body = new THREE.Mesh(bodyGeometry, bodyMaterial);
-        rocketGroup.add(body);
-
-        // Rocket nose (cone)
-        const noseGeometry = new THREE.ConeGeometry(0.8, 2, 32);
-        const noseMaterial = new THREE.MeshStandardMaterial({
-          color: 0xff0000,
-          metalness: 0.8,
-          roughness: 0.2,
-        });
-        const nose = new THREE.Mesh(noseGeometry, noseMaterial);
-        nose.position.y = 4;
-        rocketGroup.add(nose);
-
-        // Fins
-        for (let i = 0; i < 4; i++) {
-          const finGeometry = new THREE.BoxGeometry(0.2, 2, 1.5);
-          const finMaterial = new THREE.MeshStandardMaterial({
-            color: 0x3333ff,
-            metalness: 0.6,
-            roughness: 0.4,
-          });
-          const fin = new THREE.Mesh(finGeometry, finMaterial);
-          const angle = (i / 4) * Math.PI * 2;
-          fin.position.x = Math.cos(angle) * 1.2;
-          fin.position.z = Math.sin(angle) * 1.2;
-          fin.position.y = -2;
-          fin.rotation.y = angle;
-          rocketGroup.add(fin);
-        }
-
-        // Engine flames
-        const flameGeometry = new THREE.ConeGeometry(0.6, 2, 32);
-        const flameMaterial = new THREE.MeshBasicMaterial({
-          color: 0xff6600,
-          transparent: true,
-          opacity: 0.8,
-        });
-        const flame = new THREE.Mesh(flameGeometry, flameMaterial);
-        flame.position.y = -4;
-        flame.rotation.x = Math.PI;
-        rocketGroup.add(flame);
-
-        rocketGroup.scale.set(1.5, 1.5, 1.5);
-        scene.add(rocketGroup);
-        mainObject = rocketGroup;
-      } else if (index === 2) {
-        // SATURN-LIKE PLANET with rings
-        const planetGroup = new THREE.Group();
-
-        const planetGeometry = new THREE.SphereGeometry(3.5, 64, 64);
-        const planetMaterial = new THREE.MeshStandardMaterial({
-          color: 0xf4a460,
-          roughness: 0.7,
-          metalness: 0.2,
-        });
-        const planet = new THREE.Mesh(planetGeometry, planetMaterial);
-        planetGroup.add(planet);
-
-        // Multiple rings
-        for (let i = 0; i < 5; i++) {
-          const ringGeometry = new THREE.TorusGeometry(
-            4.5 + i * 0.3,
-            0.15,
-            16,
-            100
-          );
-          const ringMaterial = new THREE.MeshStandardMaterial({
-            color: i % 2 === 0 ? 0xdaa520 : 0xcd853f,
-            transparent: true,
-            opacity: 0.7,
-            side: THREE.DoubleSide,
-          });
-          const ring = new THREE.Mesh(ringGeometry, ringMaterial);
-          ring.rotation.x = Math.PI / 2.5;
-          planetGroup.add(ring);
-        }
-
-        scene.add(planetGroup);
-        mainObject = planetGroup;
-      } else {
-        // ASTEROID FIELD
-        const asteroidGroup = new THREE.Group();
-
-        for (let i = 0; i < 30; i++) {
-          const size = Math.random() * 0.5 + 0.3;
-          const asteroidGeometry = new THREE.DodecahedronGeometry(size, 0);
-          const asteroidMaterial = new THREE.MeshStandardMaterial({
-            color: 0x8b7355,
-            roughness: 0.9,
-            metalness: 0.1,
-          });
-          const asteroid = new THREE.Mesh(asteroidGeometry, asteroidMaterial);
-
-          const angle = (i / 30) * Math.PI * 2;
-          const radius = 5 + Math.random() * 3;
-          asteroid.position.x = Math.cos(angle) * radius;
-          asteroid.position.y = (Math.random() - 0.5) * 4;
-          asteroid.position.z = Math.sin(angle) * radius;
-
-          asteroid.rotation.x = Math.random() * Math.PI;
-          asteroid.rotation.y = Math.random() * Math.PI;
-          asteroid.rotation.z = Math.random() * Math.PI;
-
-          asteroidGroup.add(asteroid);
-        }
-
-        scene.add(asteroidGroup);
-        mainObject = asteroidGroup;
-      }
-
-      objectsRef.current[index] = { mainObject, camera, scene, renderer };
+    // -------------------- Planet --------------------
+    const planetGeometry = new THREE.SphereGeometry(5, 32, 32);
+    const planetMaterial = new THREE.MeshStandardMaterial({
+      color: 0x2244ff,
+      roughness: 0.8,
     });
+    const planet = new THREE.Mesh(planetGeometry, planetMaterial);
+    planet.position.set(-20, -10, -30);
+    scene.add(planet);
 
-    // Animation loop
-    let animationId;
-    const animate = () => {
-      animationId = requestAnimationFrame(animate);
+    // -------------------- Moon --------------------
+    const moonGeometry = new THREE.SphereGeometry(1.2, 32, 32);
+    const moonMaterial = new THREE.MeshStandardMaterial({
+      color: 0x999999,
+      roughness: 0.9,
+    });
+    const moon = new THREE.Mesh(moonGeometry, moonMaterial);
+    scene.add(moon);
 
-      asteroids.forEach((asteroid, index) => {
-        const obj = objectsRef.current[index];
-        if (!obj) return;
+    // -------------------- Main Asteroid --------------------
+    const asteroidGeometry = new THREE.IcosahedronGeometry(2, 1);
+    const asteroidMaterial = new THREE.MeshStandardMaterial({
+      color: 0xffaa00,
+      roughness: 1,
+      transparent: true,
+      opacity: 0.9,
+    });
+    const mainAsteroid = new THREE.Mesh(asteroidGeometry, asteroidMaterial);
+    mainAsteroid.position.set(10, 5, -20);
+    scene.add(mainAsteroid);
 
-        const canvas = canvasRefs.current[index];
-        if (!canvas) return;
+    // -------------------- Lights --------------------
+    const dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
+    dirLight.position.set(50, 50, 50);
+    scene.add(dirLight);
+    scene.add(new THREE.AmbientLight(0x404040, 0.6));
 
-        const rect = canvas.getBoundingClientRect();
-        const scrollOffset = scrollY - rect.top;
-        const isVisible = rect.top < window.innerHeight && rect.bottom > 0;
+    // -------------------- Animation Loop --------------------
+    const animateScene = () => {
+      requestAnimationFrame(animateScene);
 
-        if (isVisible) {
-          const rotationSpeed = Math.abs(scrollOffset) * 0.00005;
+      stars.rotation.y += 0.0008;
 
-          if (index === 0) {
-            // Moon rotates on scroll
-            obj.mainObject.rotation.y += rotationSpeed;
-          } else if (index === 1) {
-            // Rocket spins
-            obj.mainObject.rotation.y += rotationSpeed;
-            obj.mainObject.rotation.z = Math.sin(Date.now() * 0.001) * 0.1;
-          } else if (index === 2) {
-            // Planet rotates
-            obj.mainObject.rotation.y += rotationSpeed * 0.5;
-            obj.mainObject.children[0].rotation.y += 0.005;
-          } else {
-            // Asteroid field rotates
-            obj.mainObject.rotation.y += rotationSpeed;
-            obj.mainObject.children.forEach((child) => {
-              child.rotation.x += 0.01;
-              child.rotation.y += 0.01;
-            });
-          }
+      planet.rotation.y += 0.002;
+      moon.position.set(
+        planet.position.x + Math.cos(Date.now() * 0.001) * 8,
+        planet.position.y + Math.sin(Date.now() * 0.001) * 8,
+        planet.position.z + Math.sin(Date.now() * 0.001) * 3
+      );
 
-          obj.renderer.render(obj.scene, obj.camera);
-        }
-      });
+      mainAsteroid.rotation.x += 0.002;
+      mainAsteroid.rotation.y += 0.003;
+
+      renderer.render(scene, camera);
     };
 
-    animate();
+    animateScene();
 
     const handleResize = () => {
-      asteroids.forEach((_, index) => {
-        const canvas = canvasRefs.current[index];
-        const obj = objectsRef.current[index];
-        if (canvas && obj) {
-          obj.camera.aspect = canvas.clientWidth / canvas.clientHeight;
-          obj.camera.updateProjectionMatrix();
-          obj.renderer.setSize(canvas.clientWidth, canvas.clientHeight);
-        }
-      });
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
     };
-
     window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
-    return () => {
-      cancelAnimationFrame(animationId);
-      window.removeEventListener("resize", handleResize);
-      renderersRef.current.forEach((renderer) => renderer?.dispose());
-    };
-  }, [asteroids.length, scrollY]);
+  /* ===================== ORIGINAL FLOATING ASTEROIDS (UNCHANGED) ===================== */
+  useEffect(() => {
+    if (!floatingRef.current) return;
 
-  if (loading) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-br from-purple-900 via-fuchsia-800 to-purple-900">
-        <Moon
-          className="w-20 h-20 text-purple-300 mb-4"
-          style={{ animation: "spin 2s linear infinite" }}
-        />
-        <p className="text-purple-200 text-2xl">Loading celestial objects...</p>
-      </div>
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(
+      75,
+      window.innerWidth / window.innerHeight,
+      0.1,
+      1000
     );
-  }
+    const renderer = new THREE.WebGLRenderer({
+      canvas: floatingRef.current,
+      alpha: true,
+      antialias: true,
+    });
+
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    camera.position.z = 50;
+
+    const asteroids = [];
+    for (let i = 0; i < 30; i++) {
+      const mesh = new THREE.Mesh(
+        new THREE.IcosahedronGeometry(Math.random() * 1.2 + 0.6, 1),
+        new THREE.MeshStandardMaterial({
+          color: 0xffffff,
+          roughness: 1,
+          transparent: true,
+          opacity: 0.6,
+        })
+      );
+
+      mesh.position.set(
+        (Math.random() - 0.5) * 80,
+        (Math.random() - 0.5) * 60,
+        (Math.random() - 0.5) * 100
+      );
+
+      scene.add(mesh);
+      asteroids.push(mesh);
+    }
+
+    scene.add(new THREE.DirectionalLight(0xffffff, 0.8));
+
+    const animateAsteroids = () => {
+      requestAnimationFrame(animateAsteroids);
+      asteroids.forEach((a, i) => {
+        a.rotation.x += 0.001 + i * 0.0001;
+        a.rotation.y += 0.002;
+      });
+      renderer.render(scene, camera);
+    };
+
+    animateAsteroids();
+  }, []);
+
+  /* ===================== TITLE MOTION ===================== */
+  const asteroidX = useTransform(timeline, [0, 1, 3], ["60vw", "0vw", "-70vw"]);
+  const explorerX = useTransform(timeline, [0, 1, 3], ["-60vw", "0vw", "70vw"]);
 
   return (
-    <div className="relative bg-gradient-to-br from-purple-900 via-fuchsia-800 to-purple-900 min-h-screen">
-      <div className="space-y-0">
-        {asteroids.map((asteroid, index) => (
-          <div
-            key={asteroid.id}
-            className="min-h-screen flex items-center justify-center py-20 px-4 relative"
+    <div className="relative min-h-screen bg-black overflow-hidden">
+      <canvas ref={canvasRef} className="fixed inset-0" />
+      <canvas ref={floatingRef} className="fixed inset-0 pointer-events-none" />
+
+      <div
+        ref={containerRef}
+        className="relative z-10 h-screen overflow-y-auto"
+      >
+        {/* ===================== HERO ===================== */}
+        <section className="min-h-screen flex flex-col justify-center items-center text-center px-6">
+          <motion.h1
+            style={{ x: asteroidX }}
+            className="text-8xl font-extrabold bg-gradient-to-r from-orange-400 to-red-600 bg-clip-text text-transparent"
           >
-            {/* Individual 3D Canvas for each asteroid */}
-            <canvas
-              ref={(el) => (canvasRefs.current[index] = el)}
-              className="absolute inset-0 w-full h-full pointer-events-none"
-              style={{ zIndex: 0 }}
-            />
+            ASTEROID
+          </motion.h1>
+          <motion.h1
+            style={{ x: explorerX }}
+            className="text-8xl font-extrabold bg-gradient-to-r from-cyan-400 to-purple-600 bg-clip-text text-transparent mt-6"
+          >
+            EXPLORER
+          </motion.h1>
+          <p className="mt-10 text-2xl text-gray-300 max-w-3xl">
+            A cinematic journey through real asteroid intelligence.
+          </p>
+        </section>
 
-            <div
-              className={`max-w-4xl w-full transition-all duration-1000 transform relative z-10 ${
-                index === currentAsteroidIndex
-                  ? "opacity-100 scale-100"
-                  : "opacity-50 scale-95"
-              }`}
-            >
-              <div className="relative">
-                <div
-                  className="absolute -top-20 -right-20 w-96 h-96 rounded-full bg-gradient-to-br from-fuchsia-500 to-purple-600 opacity-20 blur-3xl"
-                  style={{ animation: "pulse 4s ease-in-out infinite" }}
-                />
-
-                <div className="bg-purple-950/40 backdrop-blur-xl rounded-3xl p-12 border border-fuchsia-400/30 shadow-2xl shadow-fuchsia-500/30 hover:shadow-fuchsia-500/50 transition-all duration-500">
-                  <div className="flex items-start justify-between mb-8">
-                    <div className="flex items-center gap-4">
-                      <div className="relative">
-                        <Moon
-                          className="w-16 h-16 text-fuchsia-300"
-                          style={{
-                            animation: "pulse 2s ease-in-out infinite",
-                          }}
-                        />
-                        <div
-                          className="absolute inset-0 w-16 h-16 border-4 border-fuchsia-400/30 rounded-full"
-                          style={{
-                            animation:
-                              "ping 2s cubic-bezier(0, 0, 0.2, 1) infinite",
-                          }}
-                        />
-                      </div>
-                      <div>
-                        <h2 className="text-5xl font-bold bg-gradient-to-r from-fuchsia-300 via-purple-300 to-pink-300 bg-clip-text text-transparent mb-2">
-                          {asteroid.name}
-                        </h2>
-                        <p className="text-purple-200 text-lg">
-                          Discovered: {asteroid.date}
-                        </p>
-                      </div>
-                    </div>
-                    {isFavorite(asteroid.id) ? (
-                      <Star
-                        className="w-10 h-10 text-yellow-300 fill-yellow-300"
-                        style={{
-                          animation: "pulse 2s ease-in-out infinite",
-                        }}
-                      />
-                    ) : (
-                      <button
-                        onClick={() => addToFavorites(asteroid)}
-                        className="p-4 bg-gradient-to-r from-fuchsia-500 to-purple-600 hover:from-fuchsia-600 hover:to-purple-700 rounded-xl transition-all transform hover:scale-110 shadow-lg shadow-fuchsia-500/50"
-                      >
-                        <Plus className="w-6 h-6" />
-                      </button>
-                    )}
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-6 mb-8">
-                    <div className="bg-gradient-to-br from-fuchsia-500/20 to-transparent p-6 rounded-2xl border border-fuchsia-400/30 backdrop-blur-sm">
-                      <p className="text-fuchsia-300 text-sm mb-2 font-medium">
-                        Right Ascension
-                      </p>
-                      <p className="text-4xl font-bold text-white font-mono">
-                        {asteroid.ra}°
-                      </p>
-                    </div>
-                    <div className="bg-gradient-to-br from-purple-500/20 to-transparent p-6 rounded-2xl border border-purple-400/30 backdrop-blur-sm">
-                      <p className="text-purple-300 text-sm mb-2 font-medium">
-                        Declination
-                      </p>
-                      <p className="text-4xl font-bold text-white font-mono">
-                        {asteroid.dec}°
-                      </p>
-                    </div>
-                    <div className="bg-gradient-to-br from-pink-500/20 to-transparent p-6 rounded-2xl border border-pink-400/30 backdrop-blur-sm">
-                      <p className="text-pink-300 text-sm mb-2 font-medium">
-                        Visual Magnitude
-                      </p>
-                      <p className="text-4xl font-bold text-white font-mono">
-                        {asteroid.vmag}
-                      </p>
-                    </div>
-                    <div className="bg-gradient-to-br from-violet-500/20 to-transparent p-6 rounded-2xl border border-violet-400/30 backdrop-blur-sm">
-                      <p className="text-violet-300 text-sm mb-2 font-medium">
-                        Observation Date
-                      </p>
-                      <p className="text-2xl font-bold text-white">
-                        {asteroid.date}
-                      </p>
-                    </div>
-                  </div>
-
-                  <button
-                    onClick={() => setSelectedAsteroid(asteroid)}
-                    className="w-full py-4 bg-gradient-to-r from-fuchsia-500 to-purple-600 hover:from-fuchsia-600 hover:to-purple-700 rounded-xl font-semibold text-lg hover:shadow-lg hover:shadow-fuchsia-500/50 transition-all transform hover:scale-105 text-white"
-                  >
-                    View Detailed Information
-                  </button>
-                </div>
+        {/* ===================== DATA STORY ===================== */}
+        <section className="min-h-screen flex items-center justify-center px-8">
+          <motion.div
+            initial={{ opacity: 0, y: 120 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 1 }}
+            className="max-w-5xl w-full grid grid-cols-1 md:grid-cols-3 gap-10"
+          >
+            {[
+              {
+                label: "Asteroid ID",
+                value: asteroidData?.full_name || "J99TS7A",
+              },
+              {
+                label: "Orbit Class",
+                value: asteroidData?.orbit_class || "Main Belt",
+              },
+              {
+                label: "Estimated Diameter",
+                value: asteroidData?.diameter || "Unknown",
+              },
+            ].map((item, i) => (
+              <div
+                key={i}
+                className="bg-white/10 backdrop-blur-xl rounded-3xl p-10 border border-white/20 text-center"
+              >
+                <p className="text-gray-400 uppercase tracking-widest text-sm">
+                  {item.label}
+                </p>
+                <h3 className="text-4xl font-bold text-white mt-4">
+                  {item.value}
+                </h3>
               </div>
-            </div>
-          </div>
+            ))}
+          </motion.div>
+        </section>
+
+        {/* ===================== STORY CHAPTERS ===================== */}
+        {[
+          {
+            chapter: "Chapter I",
+            title: "A Birth in the Main Belt",
+            text: `Our asteroid ${
+              asteroidData?.full_name || "J99TS7A"
+            } formed billions of years ago in the asteroid belt, a relic of the early solar system.`,
+            color: "text-cyan-400",
+          },
+          {
+            chapter: "Chapter II",
+            title: "Drifting Through Space",
+            text: `It silently orbits the Sun, traveling millions of kilometers every year. Its orbit class is "${
+              asteroidData?.orbit_class || "Main Belt"
+            }".`,
+            color: "text-orange-400",
+          },
+          {
+            chapter: "Chapter III",
+            title: "Preserving Ancient Secrets",
+            text: `This asteroid holds a time capsule of the early solar system, its estimated diameter is ${
+              asteroidData?.diameter || "Unknown"
+            } km, keeping cosmic history intact.`,
+            color: "text-purple-400",
+          },
+          {
+            chapter: "Chapter IV",
+            title: "A Cosmic Treasure",
+            text: `Asteroids like ${
+              asteroidData?.full_name || "J99TS7A"
+            } are potential resources for metals and water, fueling humanity's future in space.`,
+            color: "text-pink-400",
+          },
+          {
+            chapter: "Chapter V",
+            title: "The Explorer Awaits",
+            text: "Our journey today is only observation, tomorrow we may visit and mine, fulfilling humanity's curiosity and ambition.",
+            color: "text-green-400",
+          },
+        ].map((story, i) => (
+          <section
+            key={i}
+            className="min-h-screen flex items-center justify-center px-6"
+          >
+            <motion.div
+              initial={{ opacity: 0, y: 100 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 1 }}
+              className="max-w-4xl text-center"
+            >
+              <p className={`uppercase tracking-[0.4em] mb-6 ${story.color}`}>
+                {story.chapter}
+              </p>
+              <h2 className="text-6xl font-extrabold text-white mb-8">
+                {story.title}
+              </h2>
+              <p className="text-2xl text-gray-300 leading-relaxed">
+                {story.text}
+              </p>
+            </motion.div>
+          </section>
         ))}
+
+        {/* ===================== FINAL CTA ===================== */}
+        <section className="min-h-screen flex items-center justify-center">
+          <motion.button
+            whileHover={{ scale: 1.08 }}
+            onClick={() => setShowAsteroidManager(true)}
+            className="px-16 py-8 bg-gradient-to-r from-cyan-600 to-purple-700 rounded-full text-white text-2xl font-bold shadow-[0_0_80px_rgba(139,92,246,0.7)]"
+          >
+            ENTER ASTEROID DATABASE
+          </motion.button>
+        </section>
       </div>
+
+      {showAsteroidManager && (
+        <AsteroidManager
+          user={user}
+          onClose={() => setShowAsteroidManager(false)}
+        />
+      )}
     </div>
   );
 }
