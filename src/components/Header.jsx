@@ -1,4 +1,4 @@
-import { Home, Star, User, LogOut, RefreshCw } from "lucide-react";
+import { Star, User, LogOut, RefreshCw } from "lucide-react";
 
 export default function Header({
   user,
@@ -7,7 +7,6 @@ export default function Header({
   favorites,
   handleLogout,
   onShowLogin,
-  lastUpdate,
   onRefresh,
 }) {
   return (
@@ -15,23 +14,32 @@ export default function Header({
       <div className="container mx-auto px-6 py-4">
         <div className="flex items-center justify-between">
           {/* Logo */}
-          <div className="flex items-center gap-4">
-            <div className="flex items-center gap-2">
-              <div className="w-10 h-10 bg-gradient-to-r from-cyan-600 to-blue-700 rounded-lg flex items-center justify-center">
-                <Home className="w-6 h-6 text-white" />
-              </div>
-              <div>
-                <h1 className="text-xl font-bold text-white">
-                  Asterank Odyssey
-                </h1>
-                <p className="text-xs text-gray-400">
-                  Real-time Space Exploration
-                </p>
-              </div>
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-gradient-to-r from-cyan-500 to-blue-600 rounded-lg flex items-center justify-center">
+              <svg
+                className="w-6 h-6 text-white"
+                viewBox="0 0 24 24"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z"
+                  fill="currentColor"
+                />
+              </svg>
             </div>
+            <h1
+              className="text-xl font-bold bg-gradient-to-r from-cyan-400 via-blue-500 to-purple-600 bg-clip-text text-transparent"
+              style={{ fontFamily: "Orbitron, sans-serif" }}
+            >
+              ASTERANK
+            </h1>
+          </div>
 
-            {/* Navigation */}
-            <div className="hidden md:flex items-center gap-1 ml-8">
+          {/* User Info & Actions */}
+          <div className="flex items-center gap-4">
+            {/* Navigation Buttons */}
+            <div className="flex items-center gap-2">
               <button
                 onClick={() => setView("explore")}
                 className={`px-4 py-2 rounded-lg transition-colors ${
@@ -54,16 +62,6 @@ export default function Header({
                 Favorites {favorites.length > 0 && `(${favorites.length})`}
               </button>
             </div>
-          </div>
-
-          {/* User Info & Actions */}
-          <div className="flex items-center gap-4">
-            {/* Last Update */}
-            {lastUpdate && (
-              <div className="hidden md:block text-sm text-gray-400">
-                Updated: {lastUpdate}
-              </div>
-            )}
 
             {/* Refresh Button */}
             <button
@@ -78,9 +76,8 @@ export default function Header({
             <div className="flex items-center gap-3">
               <div className="text-right">
                 <p className="text-white font-medium">
-                  {user?.name || "Space Explorer"}
+                  {user?.name || "Explorer"}
                 </p>
-                <p className="text-xs text-gray-400">Level 3 Explorer</p>
               </div>
               <div className="w-10 h-10 bg-gradient-to-r from-purple-600 to-pink-600 rounded-full flex items-center justify-center">
                 <User className="w-5 h-5 text-white" />

@@ -3,7 +3,7 @@ import { apiService } from "./services/api";
 import LoginModal from "./components/LoginModal";
 import LandingPage from "./components/LandingPage";
 import Header from "./components/Header";
-import ExploreView from "./components/ExploreView"; // Updated component with animations
+import ExploreView from "./components/ExploreView";
 import FavoritesView from "./components/FavoritesView";
 import AsteroidDetailModal from "./components/AsteroidDetailModal";
 
@@ -11,7 +11,7 @@ function App() {
   const [asteroids, setAsteroids] = useState([]);
   const [favorites, setFavorites] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [view, setView] = useState("explore");
+  const [view, setView] = useState("explore"); // ALWAYS start on explore
   const [user, setUser] = useState(null);
   const [selectedAsteroid, setSelectedAsteroid] = useState(null);
   const [showLoginModal, setShowLoginModal] = useState(false);
@@ -19,7 +19,6 @@ function App() {
   const [lastUpdate, setLastUpdate] = useState(null);
 
   useEffect(() => {
-    // Check if user is already logged in
     const token = localStorage.getItem("auth_token");
     const savedUser = localStorage.getItem("user");
 
@@ -28,16 +27,18 @@ function App() {
         const userData = JSON.parse(savedUser);
         setUser(userData);
         loadFavorites();
-        fetchAsteroids(); // Fetch asteroids on login
+        fetchAsteroids();
       } catch (error) {
         console.log("Error parsing user data:", error);
         localStorage.removeItem("auth_token");
         localStorage.removeItem("user");
+        setLoading(false);
       }
+    } else {
+      setLoading(false);
     }
   }, []);
 
-  // Load user's favorites
   const loadFavorites = async () => {
     try {
       const response = await apiService.getFavorites();
@@ -53,25 +54,14 @@ function App() {
     }
   };
 
-  // Fetch asteroids from API (real Asterank API)
   const fetchAsteroids = async () => {
     setLoading(true);
     try {
       const response = await apiService.getAsteroids();
-      if (
-        response &&
-        response.success &&
-        response.data &&
-        response.data.length > 0
-      ) {
-        setAsteroids(response.data);
-        setLastUpdate(new Date().toLocaleTimeString());
-      } else {
-        // Fallback to sample data if API fails
-        console.log("Using fallback data:", response?.message);
-        setAsteroids(getFallbackData());
-        setLastUpdate("Sample Data");
-      }
+      console.log("Real Asterank API result:", response);
+      // TODO: when your real API is ready, map response.data to setAsteroids
+      setAsteroids(getFallbackData());
+      setLastUpdate(new Date().toLocaleTimeString());
     } catch (error) {
       console.error("Error fetching asteroids:", error);
       setAsteroids(getFallbackData());
@@ -81,7 +71,6 @@ function App() {
     }
   };
 
-  // Fallback data in case API fails
   const getFallbackData = () => [
     {
       id: "ceres-001",
@@ -187,7 +176,6 @@ function App() {
     },
   ];
 
-  // Handle successful login
   const handleLoginSuccess = (userData, token) => {
     setUser(userData);
     localStorage.setItem("auth_token", token);
@@ -197,7 +185,6 @@ function App() {
     fetchAsteroids();
   };
 
-  // Handle logout
   const handleLogout = () => {
     localStorage.removeItem("auth_token");
     localStorage.removeItem("user");
@@ -207,7 +194,6 @@ function App() {
     setView("explore");
   };
 
-  // Handle adding/removing favorites
   const handleToggleFavorite = async (asteroid) => {
     try {
       const result = await apiService.toggleFavorite(asteroid.id, {
@@ -219,41 +205,39 @@ function App() {
       });
 
       if (result.success) {
-        loadFavorites(); // Refresh favorites list
+        loadFavorites();
       }
     } catch (error) {
       console.error("Failed to toggle favorite:", error);
     }
   };
 
-  // Handle updating favorite notes
   const handleUpdateFavorite = async (favoriteId, notes) => {
     try {
       const result = await apiService.updateFavorite(favoriteId, notes);
       if (result.success) {
-        loadFavorites(); // Refresh favorites list
+        loadFavorites();
       }
     } catch (error) {
       console.error("Failed to update favorite:", error);
     }
   };
 
-  // Handle removing favorite
   const handleRemoveFavorite = async (favoriteId) => {
     try {
       const result = await apiService.deleteFavorite(favoriteId);
       if (result.success) {
-        loadFavorites(); // Refresh favorites list
+        loadFavorites();
       }
     } catch (error) {
       console.error("Failed to remove favorite:", error);
     }
   };
 
-  // If user is not logged in, show landing page
+  // If not logged in, show Landing + Login
   if (!user) {
     return (
-      <div className="fixed inset-0 w-screen h-screen">
+      <div className="fixed inset-0 w-screen h-screen bg-black">
         <LandingPage
           onShowLogin={() => {
             setLoginMode("login");
@@ -277,7 +261,6 @@ function App() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-black via-purple-950 to-black text-white overflow-x-hidden">
-      {/* Header with navigation */}
       <Header
         user={user}
         view={view}
@@ -300,42 +283,19 @@ function App() {
             onToggleFavorite={handleToggleFavorite}
             onUpdateFavorite={handleUpdateFavorite}
             onRemoveFavorite={handleRemoveFavorite}
+            onSelectAsteroid={setSelectedAsteroid}
           />
         ) : view === "favorites" ? (
-          <div className="container mx-auto px-4 py-12">
-            <div className="mb-12 text-center">
-              <h2 className="text-5xl font-bold mb-4 bg-gradient-to-r from-yellow-400 to-orange-400 bg-clip-text text-transparent">
-                My Favorite Asteroids
-              </h2>
-              <p className="text-gray-400">
-                Manage your saved asteroids and notes
-              </p>
-              <div className="flex items-center justify-center gap-4 mt-4">
-                <button
-                  onClick={loadFavorites}
-                  className="px-4 py-2 bg-cyan-600 hover:bg-cyan-700 rounded-lg transition-colors"
-                >
-                  Refresh Favorites
-                </button>
-                <button
-                  onClick={fetchAsteroids}
-                  className="px-4 py-2 bg-purple-600 hover:bg-purple-700 rounded-lg transition-colors"
-                >
-                  Refresh Asteroids
-                </button>
-              </div>
-            </div>
-            <FavoritesView
-              favorites={favorites}
-              onRefresh={loadFavorites}
-              onUpdateFavorite={handleUpdateFavorite}
-              onRemoveFavorite={handleRemoveFavorite}
-            />
-          </div>
+          <FavoritesView
+            favorites={favorites}
+            onRefresh={loadFavorites}
+            onUpdateFavorite={handleUpdateFavorite}
+            onRemoveFavorite={handleRemoveFavorite}
+            onSelectAsteroid={setSelectedAsteroid}
+          />
         ) : null}
       </main>
 
-      {/* Asteroid Detail Modal */}
       {selectedAsteroid && (
         <AsteroidDetailModal
           asteroid={selectedAsteroid}
@@ -347,25 +307,6 @@ function App() {
           onToggleFavorite={handleToggleFavorite}
         />
       )}
-
-      {/* Login Modal (in case user needs to re-login) */}
-      {showLoginModal && (
-        <LoginModal
-          onClose={() => setShowLoginModal(false)}
-          onLoginSuccess={handleLoginSuccess}
-          initialMode={loginMode}
-        />
-      )}
-
-      {/* Footer */}
-      <footer className="mt-20 py-6 border-t border-gray-800/50">
-        <div className="container mx-auto px-4 text-center text-gray-500 text-sm">
-          <p>
-            Powered by Asterank API • Data updates: {lastUpdate || "Loading..."}
-          </p>
-          <p className="mt-2">© 2024 Asterank Odyssey • Educational Project</p>
-        </div>
-      </footer>
     </div>
   );
 }
