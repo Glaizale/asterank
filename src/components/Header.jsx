@@ -51,16 +51,6 @@ export default function Header({
                 Explore
               </button>
               <button
-                onClick={() => setView("grid")}
-                className={`px-4 py-2 rounded-lg transition-colors ${
-                  view === "grid"
-                    ? "bg-blue-900/30 text-blue-400"
-                    : "text-gray-400 hover:text-white hover:bg-gray-800/50"
-                }`}
-              >
-                Asteroids
-              </button>
-              <button
                 onClick={() => setView("favorites")}
                 className={`px-4 py-2 rounded-lg transition-colors flex items-center gap-2 ${
                   view === "favorites"
