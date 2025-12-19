@@ -9,6 +9,7 @@ const LoginModal = ({ onClose, onLoginSuccess, onSwitchToRegister, onForgotPassw
   const [authForm, setAuthForm] = useState({
     email: "",
     password: "",
+    rememberMe: false,
   });
 
   // Simple rocket animation
@@ -39,6 +40,7 @@ const LoginModal = ({ onClose, onLoginSuccess, onSwitchToRegister, onForgotPassw
       const response = await apiService.login({
         email: authForm.email,
         password: authForm.password,
+        remember_me: authForm.rememberMe,
       });
 
       if (response.success && response.token) {
@@ -123,7 +125,13 @@ const LoginModal = ({ onClose, onLoginSuccess, onSwitchToRegister, onForgotPassw
 
           <div className="simple-remember-forgot">
             <div className="simple-remember">
-              <input type="checkbox" id="remember" disabled={isLoading} />
+              <input 
+                type="checkbox" 
+                id="remember" 
+                checked={authForm.rememberMe}
+                onChange={(e) => setAuthForm({ ...authForm, rememberMe: e.target.checked })}
+                disabled={isLoading} 
+              />
               <label htmlFor="remember">Remember me</label>
             </div>
             <button

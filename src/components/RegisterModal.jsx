@@ -88,6 +88,20 @@ const RegisterModal = ({ onClose, onRegisterSuccess, onSwitchToLogin }) => {
           <h1>CREATE ACCOUNT</h1>
         </div>
 
+        {error && (
+            <div style={{
+              backgroundColor: '#ff4444',
+              color: 'white',
+              padding: '10px',
+              borderRadius: '5px',
+              marginBottom: '15px',
+              fontSize: '14px',
+              textAlign: 'center'
+            }}>
+              {error}
+            </div>
+        )}
+
         {/* SIMPLE FORM */}
         <div className="simple-login-form">
           <div className="simple-form-group">
@@ -104,20 +118,6 @@ const RegisterModal = ({ onClose, onRegisterSuccess, onSwitchToLogin }) => {
               required
             />
           </div>
-
-          {error && (
-            <div style={{
-              backgroundColor: '#ff4444',
-              color: 'white',
-              padding: '10px',
-              borderRadius: '5px',
-              marginBottom: '15px',
-              fontSize: '14px',
-              textAlign: 'center'
-            }}>
-              {error}
-            </div>
-          )}
 
           <div className="simple-form-group">
             <label>Email Address</label>

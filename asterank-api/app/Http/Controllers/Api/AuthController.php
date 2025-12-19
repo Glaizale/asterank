@@ -45,8 +45,9 @@ class AuthController extends Controller
     public function login(Request $request)
     {
         $request->validate([
-            'email'    => 'required|email',
-            'password' => 'required',
+            'email'       => 'required|email',
+            'password'    => 'required',
+            'remember_me' => 'boolean',
         ]);
 
         $user = User::where('email', $request->email)->first();
@@ -55,12 +56,20 @@ class AuthController extends Controller
             return response()->json(['message' => 'Invalid credentials'], 401);
         }
 
-        $token = $user->createToken('auth_token')->plainTextToken;
+        // Delete old tokens for this user to prevent token bloat
+        $user->tokens()->delete();
+
+        // Create token with expiration based on remember_me
+        $tokenName = 'auth_token';
+        $expiresAt = $request->remember_me ? now()->addDays(30) : now()->addHours(24);
+        
+        $token = $user->createToken($tokenName, ['*'], $expiresAt)->plainTextToken;
 
         return response()->json([
-            'success' => true,
-            'user'    => $user,
-            'token'   => $token,
+            'success'     => true,
+            'user'        => $user,
+            'token'       => $token,
+            'remember_me' => $request->remember_me ?? false,
         ]);
     }
 
