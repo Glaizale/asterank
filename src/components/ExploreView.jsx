@@ -7,6 +7,7 @@ import {
   animate,
 } from "framer-motion";
 import * as THREE from "three";
+import axios from "axios";
 import AsteroidManager from "./AsteroidManager";
 import AsteroidStories from "./AsteroidStories";
 import AsteroidCard from "./AsteroidCard";
@@ -268,7 +269,28 @@ export default function AsterankStoryExplorer({ user }) {
   const explorerX = useTransform(timeline, [0, 1, 3], ["-60vw", "0vw", "70vw"]);
 
   const handleFavoriteAdded = () => {
-    // optional: show toast or update local state
+    // optional: toast or local UI update
+  };
+
+  // handler used by AsteroidStories
+  const handleAddFavoriteFromStory = async (asteroid) => {
+    try {
+      await axios.post(
+        `${API_URL}/favorites`,
+        {
+          asteroid_id: asteroid.id,
+          name: asteroid.name,
+          type: asteroid.type,
+          distance: asteroid.distance,
+          value: asteroid.value,
+          notes: asteroid.notes,
+        },
+        { withCredentials: true }
+      );
+      handleFavoriteAdded();
+    } catch (err) {
+      console.error("Error adding favorite from story", err);
+    }
   };
 
   return (
@@ -305,6 +327,7 @@ export default function AsterankStoryExplorer({ user }) {
             </div>
           )}
         </section>
+
         {/* STATUS CARDS */}
         <section className="min-h-screen flex items-center justify-center px-8">
           <motion.div
@@ -339,8 +362,16 @@ export default function AsterankStoryExplorer({ user }) {
             </div>
           </motion.div>
         </section>
-        \{/* STORY SECTIONS */}
-        <AsteroidStories observations={observations} />
+
+        {/* SIMPLE LIST WITH ADD TO FAVORITES (if you kept it) */}
+        {/* You removed this section already, so it's fine to leave out */}
+
+        {/* STORY SECTIONS */}
+        <AsteroidStories
+          observations={observations}
+          onAddFavorite={handleAddFavoriteFromStory}
+        />
+
         {/* FINAL CTA */}
         <section className="min-h-screen flex items-center justify-center">
           <motion.button
