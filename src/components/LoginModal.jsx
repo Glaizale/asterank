@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import "./LoginModal.css";
 import { apiService } from "../services/api";
 
-const LoginModal = ({ onClose, onLoginSuccess, onSwitchToRegister }) => {
+const LoginModal = ({ onClose, onLoginSuccess, onSwitchToRegister, onForgotPassword }) => {
   const [rocketY, setRocketY] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
@@ -130,7 +130,7 @@ const LoginModal = ({ onClose, onLoginSuccess, onSwitchToRegister }) => {
             </div>
             <button
               type="button"
-              onClick={() => alert("Password reset coming soon!")}
+              onClick={onForgotPassword}
               className="simple-forgot"
               disabled={isLoading}
             >

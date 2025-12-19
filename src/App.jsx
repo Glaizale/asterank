@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { apiService } from "./services/api";
 import LoginModal from "./components/LoginModal";
 import RegisterModal from "./components/RegisterModal";
+import ForgotPasswordModal from "./components/ForgotPasswordModal";
 import LandingPage from "./components/LandingPage";
 import Header from "./components/Header";
 import ExploreView from "./components/ExploreView";
@@ -17,6 +18,7 @@ function App() {
   const [selectedAsteroid, setSelectedAsteroid] = useState(null);
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [showRegisterModal, setShowRegisterModal] = useState(false);
+  const [showForgotPasswordModal, setShowForgotPasswordModal] = useState(false);
   const [lastUpdate, setLastUpdate] = useState(null);
 
   useEffect(() => {
@@ -251,6 +253,10 @@ function App() {
               setShowLoginModal(false);
               setShowRegisterModal(true);
             }}
+            onForgotPassword={() => {
+              setShowLoginModal(false);
+              setShowForgotPasswordModal(true);
+            }}
           />
         )}
         {showRegisterModal && (
@@ -259,6 +265,15 @@ function App() {
             onRegisterSuccess={handleLoginSuccess}
             onSwitchToLogin={() => {
               setShowRegisterModal(false);
+              setShowLoginModal(true);
+            }}
+          />
+        )}
+        {showForgotPasswordModal && (
+          <ForgotPasswordModal
+            onClose={() => setShowForgotPasswordModal(false)}
+            onBackToLogin={() => {
+              setShowForgotPasswordModal(false);
               setShowLoginModal(true);
             }}
           />

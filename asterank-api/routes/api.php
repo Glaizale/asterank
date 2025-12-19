@@ -22,6 +22,8 @@ Route::get('/asteroids/{target}', [AsteroidController::class, 'index']);
 // Public auth endpoints
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
+Route::post('/forgot-password', [AuthController::class, 'forgotPassword']);
+Route::post('/reset-password', [AuthController::class, 'resetPassword']);
 
 // Protected routes (need auth:sanctum token)
 Route::middleware('auth:sanctum')->group(function () {
