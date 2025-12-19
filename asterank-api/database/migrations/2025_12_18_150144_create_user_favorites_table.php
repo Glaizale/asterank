@@ -8,13 +8,20 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('user_favorites', function (Blueprint $table) {
+        Schema::create('favorites', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('user_id');      // logged-in user
-            $table->string('asteroid_id');              // external API id
-            $table->string('asteroid_name');            // for easy display
-            $table->text('note')->nullable();           // user note
-            $table->unsignedTinyInteger('rating')->nullable(); // 1–5 stars
+            $table->unsignedBigInteger('user_id');
+
+            // External asteroid info
+            $table->string('asteroid_id');      // from API / fallback data
+            $table->string('name');             // asteroid name
+            $table->string('type')->nullable();
+            $table->string('distance')->nullable();
+            $table->string('value')->nullable();
+
+            // User custom field (CRUD requirement)
+            $table->text('notes')->nullable();
+
             $table->timestamps();
 
             $table->foreign('user_id')
@@ -22,12 +29,14 @@ return new class extends Migration
                   ->on('users')
                   ->onDelete('cascade');
 
-            $table->unique(['user_id', 'asteroid_id']); // no duplicates
+            // prevent same asteroid twice for same user
+            $table->unique(['user_id', 'asteroid_id']);
         });
     }
 
     public function down(): void
     {
-        Schema::dropIfExists('user_favorites');
+        Schema::dropIfExists('favorites');
     }
 };
+

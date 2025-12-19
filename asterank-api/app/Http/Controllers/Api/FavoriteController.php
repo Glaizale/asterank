@@ -145,9 +145,8 @@ class FavoriteController extends Controller
             ->exists();
 
         return response()->json([
-            'success' => true,
+            'success'     => true,
             'is_favorite' => $exists,
         ]);
     }
 }
-

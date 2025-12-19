@@ -11,7 +11,6 @@ const LoginModal = ({ onClose, onLoginSuccess, onSwitchToRegister }) => {
     password: "",
   });
 
-  // Simple rocket animation
   useEffect(() => {
     const interval = setInterval(() => {
       setRocketY((prev) => {
@@ -23,10 +22,8 @@ const LoginModal = ({ onClose, onLoginSuccess, onSwitchToRegister }) => {
   }, []);
 
   const handleSubmit = async () => {
-    // Clear previous errors
     setError("");
 
-    // Validate form
     if (!authForm.email || !authForm.password) {
       setError("Please fill in all required fields");
       return;
@@ -35,7 +32,6 @@ const LoginModal = ({ onClose, onLoginSuccess, onSwitchToRegister }) => {
     setIsLoading(true);
 
     try {
-      // Real API call for login
       const response = await apiService.login({
         email: authForm.email,
         password: authForm.password,
@@ -46,7 +42,10 @@ const LoginModal = ({ onClose, onLoginSuccess, onSwitchToRegister }) => {
         localStorage.setItem("user", JSON.stringify(response.user));
         onLoginSuccess(response.user);
       } else {
-        setError(response.message || "Invalid credentials. Please check your email and password.");
+        setError(
+          response.message ||
+            "Invalid credentials. Please check your email and password."
+        );
       }
     } catch (error) {
       console.error("Authentication error:", error);
@@ -62,7 +61,6 @@ const LoginModal = ({ onClose, onLoginSuccess, onSwitchToRegister }) => {
         className="simple-login-container"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* MOVING ROCKET ABOVE */}
         <div className="simple-rocket-container">
           <div
             className="simple-rocket"
@@ -72,23 +70,23 @@ const LoginModal = ({ onClose, onLoginSuccess, onSwitchToRegister }) => {
           </div>
         </div>
 
-        {/* SIMPLE TITLE ONLY */}
         <div className="simple-login-header">
           <h1>WELCOME BACK</h1>
         </div>
 
-        {/* SIMPLE FORM */}
         <div className="simple-login-form">
           {error && (
-            <div style={{
-              backgroundColor: '#ff4444',
-              color: 'white',
-              padding: '10px',
-              borderRadius: '5px',
-              marginBottom: '15px',
-              fontSize: '14px',
-              textAlign: 'center'
-            }}>
+            <div
+              style={{
+                backgroundColor: "#ff4444",
+                color: "white",
+                padding: "10px",
+                borderRadius: "5px",
+                marginBottom: "15px",
+                fontSize: "14px",
+                textAlign: "center",
+              }}
+            >
               {error}
             </div>
           )}
@@ -147,7 +145,6 @@ const LoginModal = ({ onClose, onLoginSuccess, onSwitchToRegister }) => {
           </button>
         </div>
 
-        {/* Toggle to Register */}
         <div className="simple-create-account">
           <button
             onClick={onSwitchToRegister}

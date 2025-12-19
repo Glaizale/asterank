@@ -1,6 +1,8 @@
 import React, { useEffect, useRef } from "react";
 import * as THREE from "three";
 import { motion } from "framer-motion";
+import { apiService } from "../services/api";
+import { useState } from "react";
 
 /* =============== SHARED SCENE HOOK =============== */
 
@@ -561,7 +563,6 @@ function useGalaxyScene() {
       const randomX = (Math.random() - 0.5) * 1.6;
       const randomY = (Math.random() - 0.5) * 1.2;
       const randomZ = (Math.random() - 0.5) * 1.6;
-
       const angle = branch + spin;
       pos[i * 3] = Math.cos(angle) * radius + randomX;
       pos[i * 3 + 1] = randomY * 1.6;
@@ -648,6 +649,60 @@ export default function AsteroidStories({ observations, onAddFavorite }) {
     useGalaxyScene(),
   ];
 
+  function FavoriteButton({ asteroidId, asteroidName }) {
+    const [isFavorite, setIsFavorite] = useState(false);
+    const [saving, setSaving] = useState(false);
+
+    const handleClick = async () => {
+      console.log("Favorite clicked", { asteroidId, asteroidName });
+      if (saving) return;
+      setSaving(true);
+      try {
+        const res = await apiService.toggleFavorite(asteroidId, {
+          asteroid_id: asteroidId,
+          name: asteroidName,
+          type: "Observation",
+          distance: "",
+          value: "",
+          notes: "",
+        });
+        console.log("toggleFavorite result", res);
+        if (res.success) {
+          setIsFavorite(!res.removed);
+        }
+      } catch (err) {
+        console.error("Error toggling favorite", err);
+      } finally {
+        setSaving(false);
+      }
+    };
+
+    return (
+      <motion.button
+        whileHover={{ y: -4, scale: 1.02 }}
+        type="button"
+        className="rounded-2xl bg-black/60 border border-white/20 px-4 py-3 text-sm text-gray-100 flex-1 min-w-[220px] text-left"
+        onClick={handleClick}
+        disabled={saving}
+      >
+        <p className="text-[11px] uppercase tracking-[0.22em] text-gray-400 mb-1">
+          {isFavorite ? "Added in favorites" : "Add to favorites"}
+        </p>
+        <p className="text-base font-semibold flex items-center gap-2">
+          <span className="text-red-500 text-lg leading-none">
+            {isFavorite ? "✓" : "★"}
+          </span>
+          <span>
+            {isFavorite ? "Already in your favorites" : "Save this observation"}
+          </span>
+        </p>
+        <p className="text-[11px] text-gray-400">
+          Store this frame in your asteroid archive.
+        </p>
+      </motion.button>
+    );
+  }
+
   return (
     <>
       {featured.map((obs, idx) => {
@@ -718,7 +773,6 @@ export default function AsteroidStories({ observations, onAddFavorite }) {
               </div>
 
               <div className="grid md:grid-cols-2 gap-8 items-center">
-                {/* MAIN TEXT */}
                 <motion.div
                   initial={{ opacity: 0, y: 40 }}
                   whileInView={{ opacity: 1, y: 0 }}
@@ -799,7 +853,6 @@ export default function AsteroidStories({ observations, onAddFavorite }) {
                   </motion.p>
                 </motion.div>
 
-                {/* METRICS + 3D PANEL */}
                 <motion.div
                   initial={{ opacity: 0, y: 40 }}
                   whileInView={{ opacity: 1, y: 0 }}
@@ -862,7 +915,6 @@ export default function AsteroidStories({ observations, onAddFavorite }) {
                     </motion.div>
                   </div>
 
-                  {/* Frame offset + Add to Favorites side by side, same style */}
                   <div className="flex flex-wrap gap-3">
                     <motion.div
                       whileHover={{ y: -4, scale: 1.02 }}
@@ -879,35 +931,10 @@ export default function AsteroidStories({ observations, onAddFavorite }) {
                       </p>
                     </motion.div>
 
-                    <motion.button
-                      whileHover={{ y: -4, scale: 1.02 }}
-                      type="button"
-                      className="rounded-2xl bg-black/60 border border-white/20 px-4 py-3 text-sm text-gray-100 flex-1 min-w-[220px] text-left"
-                      onClick={() =>
-                        onAddFavorite &&
-                        onAddFavorite({
-                          id: asteroidId,
-                          name: asteroidName,
-                          type: "Observation",
-                          distance: "",
-                          value: "",
-                          notes: "",
-                        })
-                      }
-                    >
-                      <p className="text-[11px] uppercase tracking-[0.22em] text-gray-400 mb-1">
-                        Add to favorites
-                      </p>
-                      <p className="text-base font-semibold flex items-center gap-2">
-                        <span className="text-red-500 text-lg leading-none">
-                          ★
-                        </span>
-                        <span>Save this observation</span>
-                      </p>
-                      <p className="text-[11px] text-gray-400">
-                        Store this frame in your asteroid archive.
-                      </p>
-                    </motion.button>
+                    <FavoriteButton
+                      asteroidId={asteroidId}
+                      asteroidName={asteroidName}
+                    />
                   </div>
                 </motion.div>
               </div>

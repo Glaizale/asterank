@@ -1,6 +1,6 @@
 // src/pages/FavoritesPage.jsx
 import { useEffect, useState } from "react";
-import axios from "axios";
+import { apiService } from "../services/api";
 import { Trash2, Save } from "lucide-react";
 
 export default function FavoritesPage() {
@@ -9,12 +9,15 @@ export default function FavoritesPage() {
 
   const fetchFavorites = async () => {
     try {
-      const res = await axios.get("http://localhost:8000/api/favorites", {
-        withCredentials: true,
-      });
-      setFavorites(res.data);
+      const res = await apiService.getFavorites();
+      if (res.success && Array.isArray(res.data)) {
+        setFavorites(res.data);
+      } else {
+        setFavorites([]);
+      }
     } catch (err) {
       console.error("Error loading favorites", err);
+      setFavorites([]);
     } finally {
       setLoading(false);
     }
@@ -32,15 +35,12 @@ export default function FavoritesPage() {
 
   const handleSave = async (fav) => {
     try {
-      const res = await axios.put(
-        `http://localhost:8000/api/favorites/${fav.id}`,
-        {
-          note: fav.note,
-          rating: fav.rating ? Number(fav.rating) : null,
-        },
-        { withCredentials: true }
-      );
-      setFavorites((prev) => prev.map((f) => (f.id === fav.id ? res.data : f)));
+      const res = await apiService.updateFavorite(fav.id, fav.notes || "");
+      if (res.success && res.data) {
+        setFavorites((prev) =>
+          prev.map((f) => (f.id === fav.id ? res.data : f))
+        );
+      }
     } catch (err) {
       console.error("Error updating favorite", err);
     }
@@ -48,10 +48,10 @@ export default function FavoritesPage() {
 
   const handleDelete = async (id) => {
     try {
-      await axios.delete(`http://localhost:8000/api/favorites/${id}`, {
-        withCredentials: true,
-      });
-      setFavorites((prev) => prev.filter((f) => f.id !== id));
+      const res = await apiService.deleteFavorite(id);
+      if (res.success) {
+        setFavorites((prev) => prev.filter((f) => f.id !== id));
+      }
     } catch (err) {
       console.error("Error deleting favorite", err);
     }
@@ -80,29 +80,15 @@ export default function FavoritesPage() {
             className="bg-gray-900/70 border border-gray-800 rounded-xl p-4 flex flex-col md:flex-row md:items-center md:justify-between gap-3"
           >
             <div>
-              <p className="text-white font-semibold">{fav.asteroid_name}</p>
+              <p className="text-white font-semibold">{fav.name}</p>
               <p className="text-xs text-gray-500">API ID: {fav.asteroid_id}</p>
 
               <textarea
                 className="mt-2 w-full bg-black/40 border border-gray-700 rounded-md text-sm text-gray-200 p-2"
                 placeholder="Your personal note..."
-                value={fav.note || ""}
-                onChange={(e) => handleChange(fav.id, "note", e.target.value)}
+                value={fav.notes || ""}
+                onChange={(e) => handleChange(fav.id, "notes", e.target.value)}
               />
-
-              <div className="mt-2 flex items-center gap-2">
-                <label className="text-xs text-gray-400">Rating (1–5):</label>
-                <input
-                  type="number"
-                  min="1"
-                  max="5"
-                  className="w-16 bg-black/40 border border-gray-700 rounded-md text-sm text-gray-200 px-2 py-1"
-                  value={fav.rating || ""}
-                  onChange={(e) =>
-                    handleChange(fav.id, "rating", e.target.value)
-                  }
-                />
-              </div>
             </div>
 
             <div className="flex items-center gap-2 self-end md:self-auto">

@@ -61,83 +61,138 @@ export default function AsteroidManager({ user, onClose }) {
   };
 
   return (
-    <div className="fixed inset-0 bg-black/80 backdrop-blur-xl z-50 flex flex-col">
-      {/* Header */}
-      <div className="flex items-center justify-between p-6 border-b border-gray-800">
-        <div>
-          <h2 className="text-3xl md:text-4xl font-extrabold">
-            <span className="text-cyan-400">Asteroid</span>{" "}
+    <div className="fixed inset-0 z-50 flex flex-col overflow-hidden">
+      {/* leave YOUR main page background visible – only add light stars */}
+      <motion.div
+        aria-hidden
+        className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(circle,rgba(148,163,184,0.7)_1px,transparent_1px)] bg-[size:2px_2px] opacity-60"
+        animate={{
+          backgroundPosition: ["0px 0px", "70px 50px", "0px 0px"],
+        }}
+        transition={{ duration: 50, repeat: Infinity, ease: "linear" }}
+      />
+
+      {/* simple top bar: title + close, with no big background */}
+      <div className="flex items-center justify-between px-6 pt-4 pb-2">
+        <motion.div
+          initial={{ opacity: 0, x: -30 }}
+          animate={{
+            opacity: 1,
+            x: [0, 10, 0, -6, 0],
+            y: [0, -4, 0, 3, 0],
+          }}
+          transition={{ duration: 16, repeat: Infinity, ease: "easeInOut" }}
+        >
+          <h2 className="text-2xl md:text-3xl font-black drop-shadow-[0_0_12px_rgba(15,23,42,0.8)]">
+            <span className="text-sky-400">Asteroid</span>{" "}
             <span className="text-purple-400">Database</span>
           </h2>
-          <p className="text-gray-400 mt-1 text-sm md:text-base">
-            Live observations from the Asterank SkyMorph API for your target.
-          </p>
-        </div>
-        <button
+        </motion.div>
+
+        <motion.button
           type="button"
           onClick={onClose}
-          className="w-10 h-10 rounded-full bg-red-600 hover:bg-red-700 flex items-center justify-center text-xl font-bold"
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.3 }}
+          className="flex h-8 w-8 items-center justify-center rounded-full border border-sky-300/70 bg-gradient-to-br from-sky-400 via-cyan-300 to-emerald-300 text-slate-950 text-lg font-bold shadow-[0_0_18px_rgba(56,189,248,0.9)] hover:brightness-110"
         >
           ×
-        </button>
+        </motion.button>
       </div>
 
-      {/* Target input */}
+      {/* tiny target info bar, almost transparent */}
       <form
         onSubmit={handleSubmit}
-        className="px-6 pt-4 pb-2 flex flex-wrap items-center gap-3 border-b border-gray-800"
+        className="mx-6 mb-2 flex items-center gap-3 rounded-full border border-slate-500/30 bg-black/20 px-4 py-2 backdrop-blur-sm"
       >
-        <label className="text-gray-300 text-sm md:text-base">
-          Target:&nbsp;
-        </label>
+        <span className="text-xs md:text-sm text-slate-200/80">
+          Target asteroid ID
+        </span>
         <input
           type="text"
           value={target}
           onChange={(e) => setTarget(e.target.value)}
-          className="px-3 py-2 rounded-lg bg-black/60 border border-gray-700 text-white text-sm md:text-base focus:outline-none focus:border-cyan-500"
-          placeholder="e.g. J99TS7A"
+          className="w-32 rounded-lg border border-slate-600/40 bg-black/60 px-3 py-1.5 text-xs md:text-sm text-slate-100 outline-none focus:border-sky-400"
+          disabled
         />
-        <button
-          type="submit"
-          className="px-4 py-2 rounded-lg bg-cyan-600 hover:bg-cyan-700 text-white text-sm md:text-base"
-        >
-          Search
-        </button>
-        <span className="ml-auto text-xs md:text-sm text-gray-500">
-          Logged in as {user?.name || "Explorer"}
-        </span>
+        <div className="ml-auto flex items-center gap-2 text-[10px] md:text-xs text-slate-200/80">
+          <span className="inline-flex h-2 w-2 rounded-full bg-emerald-400 shadow-[0_0_10px_rgba(52,211,153,1)]" />
+          <span>SkyMorph search endpoint</span>
+        </div>
       </form>
 
-      {/* Content */}
-      <div className="flex-1 p-6 overflow-hidden flex flex-col gap-4">
-        {loading && (
-          <div className="text-cyan-400 animate-pulse">
-            Loading observations for {target}...
-          </div>
-        )}
-
-        {error && !loading && <div className="text-red-400 mb-2">{error}</div>}
-
-        {!loading && !error && (
-          <>
-            <div className="flex items-center justify-between mb-2 text-xs md:text-sm text-gray-400">
-              <span>
-                Showing {rows.length} observations for target{" "}
-                <span className="text-cyan-400 font-semibold">{target}</span>
+      {/* MAIN AREA: only a thin translucent box around the table */}
+      <div className="flex-1 px-6 pb-6 pt-1">
+        <div className="relative flex h-full flex-col">
+          {/* status line floating above table */}
+          <div className="mb-2 flex items-center justify-between text-[11px] md:text-xs text-slate-100/85">
+            <div className="flex items-center gap-2">
+              <span className="uppercase tracking-[0.2em] text-slate-300/80">
+                Data stream
               </span>
-              <span>Source: SkyMorph search endpoint</span>
+              <span className="h-[1px] w-20 bg-gradient-to-r from-sky-400 via-cyan-400/60 to-transparent" />
+              <span>
+                {loading
+                  ? `Requesting frames for ${target}…`
+                  : `Showing ${rows.length} observations for `}
+                {!loading && (
+                  <span className="font-semibold text-sky-300">{target}</span>
+                )}
+              </span>
             </div>
+            <div className="flex items-center gap-2">
+              <span className="h-2 w-2 rounded-full bg-emerald-400/90 shadow-[0_0_12px_rgba(16,185,129,1)]" />
+              <span className="text-slate-100/85">
+                {loading ? "Live query" : "Snapshot loaded"}
+              </span>
+            </div>
+          </div>
 
-            <motion.div
-              initial={{ opacity: 0, y: 40 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.4 }}
-              className="flex-1"
-            >
-              <Table columns={columns} data={rows} />
-            </motion.div>
-          </>
-        )}
+          <div className="relative flex-1 overflow-hidden">
+            {loading && (
+              <div className="flex h-full flex-col items-center justify-center gap-3 text-sky-300">
+                <motion.div
+                  className="h-9 w-9 rounded-full border-2 border-sky-400/40 border-t-sky-300"
+                  animate={{ rotate: 360 }}
+                  transition={{
+                    duration: 0.9,
+                    repeat: Infinity,
+                    ease: "linear",
+                  }}
+                />
+                <p className="text-xs md:text-sm">
+                  Loading observations for{" "}
+                  <span className="font-semibold">{target}</span>…
+                </p>
+              </div>
+            )}
+
+            {error && !loading && (
+              <motion.div
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="mt-4 rounded-xl border border-red-500/50 bg-red-500/15 px-4 py-3 text-xs md:text-sm text-red-100"
+              >
+                {error}
+              </motion.div>
+            )}
+
+            {!loading && !error && (
+              <motion.div
+                initial={{ opacity: 0, y: 18 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.35 }}
+                className="flex h-full flex-col"
+              >
+                {/* only this box: very transparent */}
+                <div className="flex-1 overflow-auto rounded-3xl border border-slate-400/35 bg-black/15 backdrop-blur-md shadow-[0_0_30px_rgba(15,23,42,0.8)]">
+                  <Table columns={columns} data={rows} />
+                </div>
+              </motion.div>
+            )}
+          </div>
+        </div>
       </div>
     </div>
   );

@@ -18,8 +18,17 @@ return new class extends Migration
                 $table->string('email')->unique();
                 $table->timestamp('email_verified_at')->nullable();
                 $table->string('password');
+                // Add this line: column to store API login token
+                $table->string('token', 80)->nullable()->unique();
                 $table->rememberToken();
                 $table->timestamps();
+            });
+        } else {
+            // If table already exists, just add the column if missing
+            Schema::table('users', function (Blueprint $table) {
+                if (!Schema::hasColumn('users', 'token')) {
+                    $table->string('token', 80)->nullable()->unique()->after('password');
+                }
             });
         }
 

@@ -7,10 +7,8 @@ import {
   animate,
 } from "framer-motion";
 import * as THREE from "three";
-import axios from "axios";
 import AsteroidManager from "./AsteroidManager";
 import AsteroidStories from "./AsteroidStories";
-import AsteroidCard from "./AsteroidCard";
 
 const API_URL = "http://localhost:8000/api";
 
@@ -58,7 +56,7 @@ export default function AsterankStoryExplorer({ user }) {
 
     // dense starfield
     const starGeom = new THREE.BufferGeometry();
-    const starCount = 6000;
+    const starCount = 6000; // more stars
     const positions = new Float32Array(starCount * 3);
     for (let i = 0; i < starCount * 3; i += 3) {
       positions[i] = (Math.random() - 0.5) * 500;
@@ -75,6 +73,7 @@ export default function AsterankStoryExplorer({ user }) {
     const stars = new THREE.Points(starGeom, starMat);
     scene.add(stars);
 
+    // small gray moons
     const moonGeom = new THREE.SphereGeometry(1.2, 16, 16);
     for (let i = 0; i < 20; i++) {
       const moon = new THREE.Mesh(
@@ -96,6 +95,7 @@ export default function AsterankStoryExplorer({ user }) {
       scene.add(moon);
     }
 
+    // small gray planets (same style as moons, no color)
     const planetGeom = new THREE.SphereGeometry(1.4, 20, 20);
     for (let i = 0; i < 10; i++) {
       const planet = new THREE.Mesh(
@@ -129,7 +129,7 @@ export default function AsterankStoryExplorer({ user }) {
     const animateScene = () => {
       frameId = requestAnimationFrame(animateScene);
       const t = clock.getElapsedTime();
-      stars.rotation.y += 0.002;
+      stars.rotation.y += 0.002; // faster star rotation
       stars.rotation.x += 0.001;
       camera.position.z = 70 + Math.sin(t * 0.15) * 3;
       renderer.render(scene, camera);
@@ -262,36 +262,10 @@ export default function AsterankStoryExplorer({ user }) {
     Array.isArray(asteroidData.data.results)
       ? asteroidData.data.results
       : [];
-
   const target = asteroidData?.target || "J99TS7A";
 
   const asteroidX = useTransform(timeline, [0, 1, 3], ["60vw", "0vw", "-70vw"]);
   const explorerX = useTransform(timeline, [0, 1, 3], ["-60vw", "0vw", "70vw"]);
-
-  const handleFavoriteAdded = () => {
-    // optional: toast or local UI update
-  };
-
-  // handler used by AsteroidStories
-  const handleAddFavoriteFromStory = async (asteroid) => {
-    try {
-      await axios.post(
-        `${API_URL}/favorites`,
-        {
-          asteroid_id: asteroid.id,
-          name: asteroid.name,
-          type: asteroid.type,
-          distance: asteroid.distance,
-          value: asteroid.value,
-          notes: asteroid.notes,
-        },
-        { withCredentials: true }
-      );
-      handleFavoriteAdded();
-    } catch (err) {
-      console.error("Error adding favorite from story", err);
-    }
-  };
 
   return (
     <div className="relative min-h-screen bg-black overflow-hidden">
@@ -304,6 +278,7 @@ export default function AsterankStoryExplorer({ user }) {
       >
         {/* HERO */}
         <section className="min-h-screen flex flex-col justify-center items-center text-center px-6">
+          {/* ASTEROID */}
           <motion.h1
             style={{ x: asteroidX }}
             className="text-[9vw] md:text-[8vw] leading-none font-extrabold bg-gradient-to-r from-orange-400 via-amber-300 to-red-600 bg-clip-text text-transparent tracking-[0.12em] uppercase"
@@ -311,6 +286,7 @@ export default function AsterankStoryExplorer({ user }) {
             ASTEROID
           </motion.h1>
 
+          {/* EXPLORER */}
           <motion.h1
             style={{ x: explorerX }}
             className="text-[9vw] md:text-[8vw] leading-none font-extrabold bg-gradient-to-r from-cyan-400 via-sky-300 to-purple-600 bg-clip-text text-transparent mt-6 tracking-[0.12em] uppercase"
@@ -363,14 +339,8 @@ export default function AsterankStoryExplorer({ user }) {
           </motion.div>
         </section>
 
-        {/* SIMPLE LIST WITH ADD TO FAVORITES (if you kept it) */}
-        {/* You removed this section already, so it's fine to leave out */}
-
         {/* STORY SECTIONS */}
-        <AsteroidStories
-          observations={observations}
-          onAddFavorite={handleAddFavoriteFromStory}
-        />
+        <AsteroidStories observations={observations} />
 
         {/* FINAL CTA */}
         <section className="min-h-screen flex items-center justify-center">
