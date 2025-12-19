@@ -107,4 +107,32 @@ export const apiService = {
       return { success: false, message: "Network error" };
     }
   },
+
+  async forgotPassword(email) {
+    try {
+      const response = await fetch(`${API_BASE_URL}/forgot-password`, {
+        method: "POST",
+        headers: getAuthHeader(),
+        body: JSON.stringify({ email }),
+      });
+      return response.json();
+    } catch (error) {
+      console.error("API Error:", error);
+      return { success: false, message: "Network error" };
+    }
+  },
+
+  async resetPassword(data) {
+    try {
+      const response = await fetch(`${API_BASE_URL}/reset-password`, {
+        method: "POST",
+        headers: getAuthHeader(),
+        body: JSON.stringify(data),
+      });
+      return response.json();
+    } catch (error) {
+      console.error("API Error:", error);
+      return { success: false, message: "Network error" };
+    }
+  },
 };

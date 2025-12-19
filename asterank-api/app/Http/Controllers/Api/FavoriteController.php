@@ -13,7 +13,15 @@ class FavoriteController extends Controller
     {
         $user = Auth::user();
 
+        if (!$user) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Unauthenticated',
+            ], 401);
+        }
+
         $favorites = Favorite::where('user_id', $user->id)
+            ->select(['id', 'asteroid_id', 'name', 'type', 'distance', 'value', 'notes', 'created_at'])
             ->orderBy('created_at', 'desc')
             ->get();
 
@@ -26,6 +34,13 @@ class FavoriteController extends Controller
     public function store(Request $request)
     {
         $user = Auth::user();
+
+        if (!$user) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Unauthenticated',
+            ], 401);
+        }
 
         $validated = $request->validate([
             'asteroid_id' => 'required|string|max:255',
@@ -60,6 +75,13 @@ class FavoriteController extends Controller
     {
         $user = Auth::user();
 
+        if (!$user) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Unauthenticated',
+            ], 401);
+        }
+
         $favorite = Favorite::where('user_id', $user->id)
             ->where('id', $id)
             ->firstOrFail();
@@ -80,6 +102,13 @@ class FavoriteController extends Controller
     {
         $user = Auth::user();
 
+        if (!$user) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Unauthenticated',
+            ], 401);
+        }
+
         $favorite = Favorite::where('user_id', $user->id)
             ->where('id', $id)
             ->firstOrFail();
@@ -92,53 +121,77 @@ class FavoriteController extends Controller
         ]);
     }
 
-    // POST /favorites/{asteroid_id}/toggle
+    // POST /api/favorites/{asteroid_id}/toggle
     public function toggle(Request $request, $asteroid_id)
     {
         $user = Auth::user();
 
-        $existing = Favorite::where('user_id', $user->id)
-            ->where('asteroid_id', $asteroid_id)
-            ->first();
+        if (!$user) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Unauthenticated',
+            ], 401);
+        }
 
-        if ($existing) {
-            $existing->delete();
+        try {
+            $existing = Favorite::where('user_id', $user->id)
+                ->where('asteroid_id', $asteroid_id)
+                ->first();
+
+            // If favorite exists, delete (toggle off)
+            if ($existing) {
+                $existing->delete();
+
+                return response()->json([
+                    'success' => true,
+                    'removed' => true,
+                ]);
+            }
+
+            // Otherwise create (toggle on)
+            $validated = $request->validate([
+                'name'     => 'required|string|max:255',
+                'type'     => 'nullable|string|max:255',
+                'distance' => 'nullable|string|max:255',
+                'value'    => 'nullable|string|max:255',
+                'notes'    => 'nullable|string',
+            ]);
+
+            $favorite = Favorite::create([
+                'user_id'     => $user->id,
+                'asteroid_id' => $asteroid_id,
+                'name'        => $validated['name'],
+                'type'        => $validated['type'] ?? null,
+                'distance'    => $validated['distance'] ?? null,
+                'value'       => $validated['value'] ?? null,
+                'notes'       => $validated['notes'] ?? null,
+            ]);
 
             return response()->json([
                 'success' => true,
-                'removed' => true,
+                'removed' => false,
+                'data'    => $favorite,
             ]);
+
+        } catch (\Throwable $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage(),
+            ], 500);
         }
-
-        $validated = $request->validate([
-            'name'     => 'required|string|max:255',
-            'type'     => 'nullable|string|max:255',
-            'distance' => 'nullable|string|max:255',
-            'value'    => 'nullable|string|max:255',
-            'notes'    => 'nullable|string',
-        ]);
-
-        $favorite = Favorite::create([
-            'user_id'     => $user->id,
-            'asteroid_id' => $asteroid_id,
-            'name'        => $validated['name'],
-            'type'        => $validated['type'] ?? null,
-            'distance'    => $validated['distance'] ?? null,
-            'value'       => $validated['value'] ?? null,
-            'notes'       => $validated['notes'] ?? null,
-        ]);
-
-        return response()->json([
-            'success' => true,
-            'removed' => false,
-            'data'    => $favorite,
-        ]);
     }
 
-    // GET /favorites/{asteroid_id}/check
+    // GET /api/favorites/{asteroid_id}/check
     public function check($asteroid_id)
     {
         $user = Auth::user();
+
+        if (!$user) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Unauthenticated',
+            ], 401);
+        }
 
         $exists = Favorite::where('user_id', $user->id)
             ->where('asteroid_id', $asteroid_id)

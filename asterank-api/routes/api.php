@@ -6,39 +6,32 @@ use App\Http\Controllers\AsteroidController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\FavoriteController;
 
-/*
-|--------------------------------------------------------------------------
-| API Routes
-|--------------------------------------------------------------------------
-|
-| Here is where you can register API routes for your application.
-|
-*/
-
-// Public asteroid endpoints (no auth needed)
+// Public asteroid endpoints
 Route::get('/asteroids', [AsteroidController::class, 'index']);
 Route::get('/asteroids/{target}', [AsteroidController::class, 'index']);
 
 // Public auth endpoints
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
+Route::post('/forgot-password', [AuthController::class, 'forgotPassword']);
+Route::post('/reset-password', [AuthController::class, 'resetPassword']);
 
-// TEMPORARILY UNPROTECTED routes (no auth:api, to avoid api_token error)
-Route::group([], function () {
+// PROTECTED routes – require Sanctum token
+Route::middleware('auth:sanctum')->group(function () {
 
     // Current logged in user
     Route::get('/user', [AuthController::class, 'getUser']);
 
-    // Logout (revoke token)
+    // Logout
     Route::post('/logout', [AuthController::class, 'logout']);
 
-    // Favorites CRUD (User's Chapter)
-    Route::get('/favorites', [FavoriteController::class, 'index']);            // READ
-    Route::post('/favorites', [FavoriteController::class, 'store']);           // CREATE
-    Route::put('/favorites/{id}', [FavoriteController::class, 'update']);      // UPDATE
-    Route::delete('/favorites/{id}', [FavoriteController::class, 'destroy']);  // DELETE
+    // Favorites CRUD
+    Route::get('/favorites', [FavoriteController::class, 'index']);           // READ
+    Route::post('/favorites', [FavoriteController::class, 'store']);          // CREATE
+    Route::put('/favorites/{id}', [FavoriteController::class, 'update']);     // UPDATE
+    Route::delete('/favorites/{id}', [FavoriteController::class, 'destroy']); // DELETE
 
-    // Optional helpers for UI (toggle/check)
+    // Toggle / check helpers
     Route::post('/favorites/{asteroid_id}/toggle', [FavoriteController::class, 'toggle']);
     Route::get('/favorites/{asteroid_id}/check', [FavoriteController::class, 'check']);
 });

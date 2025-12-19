@@ -2,13 +2,19 @@ import React, { useState, useEffect } from "react";
 import "./LoginModal.css";
 import { apiService } from "../services/api";
 
-const LoginModal = ({ onClose, onLoginSuccess, onSwitchToRegister }) => {
+const LoginModal = ({
+  onClose,
+  onLoginSuccess,
+  onSwitchToRegister,
+  onForgotPassword,
+}) => {
   const [rocketY, setRocketY] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const [authForm, setAuthForm] = useState({
     email: "",
     password: "",
+    rememberMe: false,
   });
 
   useEffect(() => {
@@ -35,12 +41,15 @@ const LoginModal = ({ onClose, onLoginSuccess, onSwitchToRegister }) => {
       const response = await apiService.login({
         email: authForm.email,
         password: authForm.password,
+        remember_me: authForm.rememberMe,
       });
 
       if (response.success && response.token) {
         localStorage.setItem("auth_token", response.token);
         localStorage.setItem("user", JSON.stringify(response.user));
-        onLoginSuccess(response.user);
+
+        onLoginSuccess && onLoginSuccess(response.user, response.token);
+        onClose && onClose();
       } else {
         setError(
           response.message ||
@@ -123,12 +132,23 @@ const LoginModal = ({ onClose, onLoginSuccess, onSwitchToRegister }) => {
 
           <div className="simple-remember-forgot">
             <div className="simple-remember">
-              <input type="checkbox" id="remember" disabled={isLoading} />
+              <input
+                type="checkbox"
+                id="remember"
+                checked={authForm.rememberMe}
+                onChange={(e) =>
+                  setAuthForm({
+                    ...authForm,
+                    rememberMe: e.target.checked,
+                  })
+                }
+                disabled={isLoading}
+              />
               <label htmlFor="remember">Remember me</label>
             </div>
             <button
               type="button"
-              onClick={() => alert("Password reset coming soon!")}
+              onClick={onForgotPassword}
               className="simple-forgot"
               disabled={isLoading}
             >

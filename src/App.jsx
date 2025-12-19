@@ -2,11 +2,15 @@ import { useState, useEffect } from "react";
 import { apiService } from "./services/api";
 import LoginModal from "./components/LoginModal";
 import RegisterModal from "./components/RegisterModal";
+import ForgotPasswordModal from "./components/ForgotPasswordModal";
 import LandingPage from "./components/LandingPage";
 import Header from "./components/Header";
 import ExploreView from "./components/ExploreView";
+import AsteroidGridView from "./components/AsteroidGridView";
 import FavoritesView from "./components/FavoritesView";
 import AsteroidDetailModal from "./components/AsteroidDetailModal";
+import Toast from "./components/Toast";
+import ConfirmModal from "./components/ConfirmModal";
 
 function App() {
   const [asteroids, setAsteroids] = useState([]);
@@ -17,7 +21,10 @@ function App() {
   const [selectedAsteroid, setSelectedAsteroid] = useState(null);
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [showRegisterModal, setShowRegisterModal] = useState(false);
+  const [showForgotPasswordModal, setShowForgotPasswordModal] = useState(false);
   const [lastUpdate, setLastUpdate] = useState(null);
+  const [toast, setToast] = useState(null);
+  const [confirmModal, setConfirmModal] = useState(null);
 
   useEffect(() => {
     const token = localStorage.getItem("auth_token");
@@ -41,6 +48,12 @@ function App() {
   }, []);
 
   const loadFavorites = async () => {
+    // Only load favorites if user is logged in
+    if (!user && !localStorage.getItem("auth_token")) {
+      setFavorites([]);
+      return;
+    }
+    
     try {
       const response = await apiService.getFavorites();
       if (response.success) {
@@ -206,10 +219,23 @@ function App() {
       });
 
       if (result.success) {
-        loadFavorites();
+        await loadFavorites();
+        setToast({
+          message: result.removed ? "Removed from favorites!" : "Added to favorites!",
+          type: "success",
+        });
+      } else {
+        setToast({
+          message: "Failed to toggle favorite: " + (result.message || "Unknown error"),
+          type: "error",
+        });
       }
     } catch (error) {
       console.error("Failed to toggle favorite:", error);
+      setToast({
+        message: "Error: " + error.message,
+        type: "error",
+      });
     }
   };
 
@@ -224,15 +250,31 @@ function App() {
     }
   };
 
-  const handleRemoveFavorite = async (favoriteId) => {
-    try {
-      const result = await apiService.deleteFavorite(favoriteId);
-      if (result.success) {
-        loadFavorites();
-      }
-    } catch (error) {
-      console.error("Failed to remove favorite:", error);
-    }
+  const handleRemoveFavorite = (favoriteId, asteroidName) => {
+    setConfirmModal({
+      title: "Remove Favorite",
+      message: `Are you sure you want to remove "${asteroidName}" from your favorites?`,
+      onConfirm: async () => {
+        try {
+          const result = await apiService.deleteFavorite(favoriteId);
+          if (result.success) {
+            await loadFavorites();
+            setToast({
+              message: "Removed from favorites!",
+              type: "success",
+            });
+          }
+        } catch (error) {
+          console.error("Failed to remove favorite:", error);
+          setToast({
+            message: "Failed to remove favorite",
+            type: "error",
+          });
+        }
+        setConfirmModal(null);
+      },
+      onCancel: () => setConfirmModal(null),
+    });
   };
 
   // If not logged in, show Landing + Login
@@ -251,6 +293,10 @@ function App() {
               setShowLoginModal(false);
               setShowRegisterModal(true);
             }}
+            onForgotPassword={() => {
+              setShowLoginModal(false);
+              setShowForgotPasswordModal(true);
+            }}
           />
         )}
         {showRegisterModal && (
@@ -259,6 +305,15 @@ function App() {
             onRegisterSuccess={handleLoginSuccess}
             onSwitchToLogin={() => {
               setShowRegisterModal(false);
+              setShowLoginModal(true);
+            }}
+          />
+        )}
+        {showForgotPasswordModal && (
+          <ForgotPasswordModal
+            onClose={() => setShowForgotPasswordModal(false)}
+            onBackToLogin={() => {
+              setShowForgotPasswordModal(false);
               setShowLoginModal(true);
             }}
           />
@@ -293,6 +348,14 @@ function App() {
             onRemoveFavorite={handleRemoveFavorite}
             onSelectAsteroid={setSelectedAsteroid}
           />
+        ) : view === "grid" ? (
+          <AsteroidGridView
+            asteroids={asteroids}
+            loading={loading}
+            favorites={favorites}
+            onToggleFavorite={handleToggleFavorite}
+            onSelectAsteroid={setSelectedAsteroid}
+          />
         ) : view === "favorites" ? (
           <FavoritesView
             favorites={favorites}
@@ -313,6 +376,23 @@ function App() {
             (f) => f.asteroid_id === selectedAsteroid.id
           )}
           onToggleFavorite={handleToggleFavorite}
+        />
+      )}
+
+      {toast && (
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          onClose={() => setToast(null)}
+        />
+      )}
+
+      {confirmModal && (
+        <ConfirmModal
+          title={confirmModal.title}
+          message={confirmModal.message}
+          onConfirm={confirmModal.onConfirm}
+          onCancel={confirmModal.onCancel}
         />
       )}
     </div>

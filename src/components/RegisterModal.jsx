@@ -51,9 +51,7 @@ const RegisterModal = ({ onClose, onRegisterSuccess, onSwitchToLogin }) => {
       });
 
       if (response.success && response.token) {
-        localStorage.setItem("auth_token", response.token);
-        localStorage.setItem("user", JSON.stringify(response.user));
-        onRegisterSuccess(response.user);
+        onRegisterSuccess(response.user, response.token);
       } else if (response.errors) {
         // Handle validation errors
         const errorMessages = Object.values(response.errors).flat().join(', ');
@@ -90,6 +88,20 @@ const RegisterModal = ({ onClose, onRegisterSuccess, onSwitchToLogin }) => {
           <h1>CREATE ACCOUNT</h1>
         </div>
 
+        {error && (
+            <div style={{
+              backgroundColor: '#ff4444',
+              color: 'white',
+              padding: '10px',
+              borderRadius: '5px',
+              marginBottom: '15px',
+              fontSize: '14px',
+              textAlign: 'center'
+            }}>
+              {error}
+            </div>
+        )}
+
         {/* SIMPLE FORM */}
         <div className="simple-login-form">
           <div className="simple-form-group">
@@ -106,20 +118,6 @@ const RegisterModal = ({ onClose, onRegisterSuccess, onSwitchToLogin }) => {
               required
             />
           </div>
-
-          {error && (
-            <div style={{
-              backgroundColor: '#ff4444',
-              color: 'white',
-              padding: '10px',
-              borderRadius: '5px',
-              marginBottom: '15px',
-              fontSize: '14px',
-              textAlign: 'center'
-            }}>
-              {error}
-            </div>
-          )}
 
           <div className="simple-form-group">
             <label>Email Address</label>
