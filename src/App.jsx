@@ -6,7 +6,6 @@ import ForgotPasswordModal from "./components/ForgotPasswordModal";
 import LandingPage from "./components/LandingPage";
 import Header from "./components/Header";
 import ExploreView from "./components/ExploreView";
-import AsteroidGridView from "./components/AsteroidGridView";
 import FavoritesView from "./components/FavoritesView";
 import AsteroidDetailModal from "./components/AsteroidDetailModal";
 import Toast from "./components/Toast";
@@ -346,14 +345,6 @@ function App() {
             onToggleFavorite={handleToggleFavorite}
             onUpdateFavorite={handleUpdateFavorite}
             onRemoveFavorite={handleRemoveFavorite}
-            onSelectAsteroid={setSelectedAsteroid}
-          />
-        ) : view === "grid" ? (
-          <AsteroidGridView
-            asteroids={asteroids}
-            loading={loading}
-            favorites={favorites}
-            onToggleFavorite={handleToggleFavorite}
             onSelectAsteroid={setSelectedAsteroid}
           />
         ) : view === "favorites" ? (
