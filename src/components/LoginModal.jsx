@@ -42,9 +42,7 @@ const LoginModal = ({ onClose, onLoginSuccess, onSwitchToRegister, onForgotPassw
       });
 
       if (response.success && response.token) {
-        localStorage.setItem("auth_token", response.token);
-        localStorage.setItem("user", JSON.stringify(response.user));
-        onLoginSuccess(response.user);
+        onLoginSuccess(response.user, response.token);
       } else {
         setError(response.message || "Invalid credentials. Please check your email and password.");
       }

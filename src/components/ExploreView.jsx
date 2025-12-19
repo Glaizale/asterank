@@ -14,7 +14,7 @@ import AsteroidCard from "./AsteroidCard";
 
 const API_URL = "http://localhost:8000/api";
 
-export default function AsterankStoryExplorer({ user }) {
+export default function AsterankStoryExplorer({ user, onToggleFavorite }) {
   const [showAsteroidManager, setShowAsteroidManager] = useState(false);
   const [asteroidData, setAsteroidData] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -275,18 +275,7 @@ export default function AsterankStoryExplorer({ user }) {
   // handler used by AsteroidStories
   const handleAddFavoriteFromStory = async (asteroid) => {
     try {
-      await axios.post(
-        `${API_URL}/favorites`,
-        {
-          asteroid_id: asteroid.id,
-          name: asteroid.name,
-          type: asteroid.type,
-          distance: asteroid.distance,
-          value: asteroid.value,
-          notes: asteroid.notes,
-        },
-        { withCredentials: true }
-      );
+      await onToggleFavorite(asteroid);
       handleFavoriteAdded();
     } catch (err) {
       console.error("Error adding favorite from story", err);

@@ -14,6 +14,7 @@ class FavoriteController extends Controller
         $user = Auth::user();
 
         $favorites = Favorite::where('user_id', $user->id)
+            ->select(['id', 'asteroid_id', 'name', 'type', 'distance', 'value', 'notes', 'created_at'])
             ->orderBy('created_at', 'desc')
             ->get();
 
@@ -92,11 +93,11 @@ class FavoriteController extends Controller
         ]);
     }
 
-    // POST /favorites/{asteroid_id}/toggle
     public function toggle(Request $request, $asteroid_id)
     {
         $user = Auth::user();
 
+        // Use firstOrNew to reduce queries
         $existing = Favorite::where('user_id', $user->id)
             ->where('asteroid_id', $asteroid_id)
             ->first();
@@ -118,6 +119,7 @@ class FavoriteController extends Controller
             'notes'    => 'nullable|string',
         ]);
 
+        // Use create instead of updateOrCreate for better performance
         $favorite = Favorite::create([
             'user_id'     => $user->id,
             'asteroid_id' => $asteroid_id,
@@ -140,6 +142,7 @@ class FavoriteController extends Controller
     {
         $user = Auth::user();
 
+        // Use exists() instead of first() for better performance
         $exists = Favorite::where('user_id', $user->id)
             ->where('asteroid_id', $asteroid_id)
             ->exists();

@@ -51,9 +51,7 @@ const RegisterModal = ({ onClose, onRegisterSuccess, onSwitchToLogin }) => {
       });
 
       if (response.success && response.token) {
-        localStorage.setItem("auth_token", response.token);
-        localStorage.setItem("user", JSON.stringify(response.user));
-        onRegisterSuccess(response.user);
+        onRegisterSuccess(response.user, response.token);
       } else if (response.errors) {
         // Handle validation errors
         const errorMessages = Object.values(response.errors).flat().join(', ');
