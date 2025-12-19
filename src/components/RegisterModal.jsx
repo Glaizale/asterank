@@ -2,13 +2,15 @@ import React, { useState, useEffect } from "react";
 import "./LoginModal.css";
 import { apiService } from "../services/api";
 
-const LoginModal = ({ onClose, onLoginSuccess, onSwitchToRegister }) => {
+const RegisterModal = ({ onClose, onRegisterSuccess, onSwitchToLogin }) => {
   const [rocketY, setRocketY] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const [authForm, setAuthForm] = useState({
+    name: "",
     email: "",
     password: "",
+    password_confirmation: "",
   });
 
   // Simple rocket animation
@@ -27,30 +29,41 @@ const LoginModal = ({ onClose, onLoginSuccess, onSwitchToRegister }) => {
     setError("");
 
     // Validate form
-    if (!authForm.email || !authForm.password) {
+    if (!authForm.name || !authForm.email || !authForm.password || !authForm.password_confirmation) {
       setError("Please fill in all required fields");
+      return;
+    }
+
+    if (authForm.password !== authForm.password_confirmation) {
+      setError("Passwords do not match");
       return;
     }
 
     setIsLoading(true);
 
     try {
-      // Real API call for login
-      const response = await apiService.login({
+      // Real API call for registration
+      const response = await apiService.register({
+        name: authForm.name,
         email: authForm.email,
         password: authForm.password,
+        password_confirmation: authForm.password,
       });
 
       if (response.success && response.token) {
         localStorage.setItem("auth_token", response.token);
         localStorage.setItem("user", JSON.stringify(response.user));
-        onLoginSuccess(response.user);
+        onRegisterSuccess(response.user);
+      } else if (response.errors) {
+        // Handle validation errors
+        const errorMessages = Object.values(response.errors).flat().join(', ');
+        setError(errorMessages);
       } else {
-        setError(response.message || "Invalid credentials. Please check your email and password.");
+        setError("Registration failed. Please try again.");
       }
     } catch (error) {
-      console.error("Authentication error:", error);
-      setError(error.message || "Authentication failed. Please try again.");
+      console.error("Registration error:", error);
+      setError(error.message || "Registration failed. Please try again.");
     } finally {
       setIsLoading(false);
     }
@@ -74,11 +87,26 @@ const LoginModal = ({ onClose, onLoginSuccess, onSwitchToRegister }) => {
 
         {/* SIMPLE TITLE ONLY */}
         <div className="simple-login-header">
-          <h1>WELCOME BACK</h1>
+          <h1>CREATE ACCOUNT</h1>
         </div>
 
         {/* SIMPLE FORM */}
         <div className="simple-login-form">
+          <div className="simple-form-group">
+            <label>Full Name</label>
+            <input
+              type="text"
+              value={authForm.name}
+              onChange={(e) => {
+                setAuthForm({ ...authForm, name: e.target.value });
+                setError("");
+              }}
+              placeholder="Enter your name"
+              disabled={isLoading}
+              required
+            />
+          </div>
+
           {error && (
             <div style={{
               backgroundColor: '#ff4444',
@@ -123,19 +151,19 @@ const LoginModal = ({ onClose, onLoginSuccess, onSwitchToRegister }) => {
             />
           </div>
 
-          <div className="simple-remember-forgot">
-            <div className="simple-remember">
-              <input type="checkbox" id="remember" disabled={isLoading} />
-              <label htmlFor="remember">Remember me</label>
-            </div>
-            <button
-              type="button"
-              onClick={() => alert("Password reset coming soon!")}
-              className="simple-forgot"
+          <div className="simple-form-group">
+            <label>Confirm Password</label>
+            <input
+              type="password"
+              value={authForm.password_confirmation}
+              onChange={(e) => {
+                setAuthForm({ ...authForm, password_confirmation: e.target.value });
+                setError("");
+              }}
+              placeholder="Confirm your password"
               disabled={isLoading}
-            >
-              Forgot Password?
-            </button>
+              required
+            />
           </div>
 
           <button
@@ -143,18 +171,18 @@ const LoginModal = ({ onClose, onLoginSuccess, onSwitchToRegister }) => {
             className="simple-login-btn"
             disabled={isLoading}
           >
-            {isLoading ? "LOGGING IN..." : "LOGIN"}
+            {isLoading ? "CREATING ACCOUNT..." : "SIGN UP"}
           </button>
         </div>
 
-        {/* Toggle to Register */}
+        {/* Toggle to Login */}
         <div className="simple-create-account">
           <button
-            onClick={onSwitchToRegister}
+            onClick={onSwitchToLogin}
             className="simple-create-btn"
             disabled={isLoading}
           >
-            Create Account
+            Already have an account? Login
           </button>
         </div>
       </div>
@@ -162,4 +190,4 @@ const LoginModal = ({ onClose, onLoginSuccess, onSwitchToRegister }) => {
   );
 };
 
-export default LoginModal;
+export default RegisterModal;

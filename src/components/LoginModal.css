@@ -17,14 +17,14 @@
 /* SMALLER CONTAINER - Purple theme matching landing page */
 .simple-login-container {
   width: 100%;
-  max-width: 400px;
+  max-width: 380px;
   background: linear-gradient(
     135deg,
     rgba(88, 28, 135, 0.95) 0%,
     rgba(49, 19, 91, 0.95) 100%
   );
   border-radius: 20px;
-  padding: 35px 30px;
+  padding: 25px 25px;
   box-shadow: 0 20px 60px rgba(168, 85, 247, 0.4);
   text-align: center;
   border: 2px solid rgba(168, 85, 247, 0.3);
@@ -55,26 +55,26 @@
 
 /* Rocket Container */
 .simple-rocket-container {
-  margin-bottom: 20px;
-  height: 60px;
+  margin-bottom: 15px;
+  height: 50px;
   display: flex;
   justify-content: center;
   align-items: center;
 }
 
 .simple-rocket {
-  font-size: 40px;
+  font-size: 35px;
   transition: transform 0.05s ease;
   filter: drop-shadow(0 0 15px rgba(251, 191, 36, 0.6));
 }
 
 /* Header */
 .simple-login-header {
-  margin-bottom: 25px;
+  margin-bottom: 20px;
 }
 
 .simple-login-header h1 {
-  font-size: 22px;
+  font-size: 20px;
   font-weight: 800;
   color: white;
   margin: 0;
@@ -85,11 +85,11 @@
 
 /* Form */
 .simple-login-form {
-  margin-bottom: 15px;
+  margin-bottom: 12px;
 }
 
 .simple-form-group {
-  margin-bottom: 18px;
+  margin-bottom: 14px;
   text-align: left;
 }
 

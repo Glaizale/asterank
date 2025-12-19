@@ -4,7 +4,7 @@ const authService = {
   // Register user
   async register(userData) {
     try {
-      const response = await api.post("/auth/register", userData);
+      const response = await api.post("/register", userData);
       return response.data;
     } catch (error) {
       throw error.response?.data || error.message;
@@ -14,11 +14,11 @@ const authService = {
   // Login user
   async login(credentials) {
     try {
-      const response = await api.post("/auth/login", credentials);
+      const response = await api.post("/login", credentials);
 
       // Save token and user data
       if (response.data.token) {
-        localStorage.setItem("token", response.data.token);
+        localStorage.setItem("auth_token", response.data.token);
         localStorage.setItem("user", JSON.stringify(response.data.user));
       }
 
@@ -30,7 +30,7 @@ const authService = {
 
   // Logout user
   logout() {
-    localStorage.removeItem("token");
+    localStorage.removeItem("auth_token");
     localStorage.removeItem("user");
     window.location.href = "/";
   },
@@ -43,7 +43,7 @@ const authService = {
 
   // Check if user is authenticated
   isAuthenticated() {
-    return !!localStorage.getItem("token");
+    return !!localStorage.getItem("auth_token");
   },
 };
 

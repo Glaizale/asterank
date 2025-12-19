@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { apiService } from "./services/api";
 import LoginModal from "./components/LoginModal";
+import RegisterModal from "./components/RegisterModal";
 import LandingPage from "./components/LandingPage";
 import Header from "./components/Header";
 import ExploreView from "./components/ExploreView";
@@ -15,7 +16,7 @@ function App() {
   const [user, setUser] = useState(null);
   const [selectedAsteroid, setSelectedAsteroid] = useState(null);
   const [showLoginModal, setShowLoginModal] = useState(false);
-  const [loginMode, setLoginMode] = useState("login");
+  const [showRegisterModal, setShowRegisterModal] = useState(false);
   const [lastUpdate, setLastUpdate] = useState(null);
 
   useEffect(() => {
@@ -239,20 +240,27 @@ function App() {
     return (
       <div className="fixed inset-0 w-screen h-screen bg-black">
         <LandingPage
-          onShowLogin={() => {
-            setLoginMode("login");
-            setShowLoginModal(true);
-          }}
-          onShowSignup={() => {
-            setLoginMode("register");
-            setShowLoginModal(true);
-          }}
+          onShowLogin={() => setShowLoginModal(true)}
+          onShowSignup={() => setShowRegisterModal(true)}
         />
         {showLoginModal && (
           <LoginModal
             onClose={() => setShowLoginModal(false)}
             onLoginSuccess={handleLoginSuccess}
-            initialMode={loginMode}
+            onSwitchToRegister={() => {
+              setShowLoginModal(false);
+              setShowRegisterModal(true);
+            }}
+          />
+        )}
+        {showRegisterModal && (
+          <RegisterModal
+            onClose={() => setShowRegisterModal(false)}
+            onRegisterSuccess={handleLoginSuccess}
+            onSwitchToLogin={() => {
+              setShowRegisterModal(false);
+              setShowLoginModal(true);
+            }}
           />
         )}
       </div>

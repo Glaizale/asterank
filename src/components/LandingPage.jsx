@@ -1,7 +1,7 @@
 import React, { useRef, useEffect } from "react";
 import * as THREE from "three";
 
-function LandingPage({ onShowLogin }) {
+function LandingPage({ onShowLogin, onShowSignup }) {
   const mountRef = useRef(null);
 
   useEffect(() => {
@@ -183,7 +183,7 @@ function LandingPage({ onShowLogin }) {
           LOG IN
         </button>
         <button
-          onClick={onShowLogin}
+          onClick={onShowSignup}
           className="px-8 py-3 bg-white text-purple-900 rounded-full text-sm font-semibold tracking-wider hover:bg-purple-100 transition-all transform hover:scale-105 shadow-lg"
         >
           SIGN UP
