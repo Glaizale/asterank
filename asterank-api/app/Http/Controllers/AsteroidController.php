@@ -12,10 +12,12 @@ class AsteroidController extends Controller
         $target = $target ?? $request->query('target', 'J99TS7A');
 
         try {
-            $response = Http::timeout(30)->get(
-                'https://www.asterank.com/api/skymorph/search',
-                ['target' => $target]
-            );
+            $response = Http::timeout(30)
+                ->withOptions(['verify' => false]) // Disable SSL verification for development
+                ->get(
+                    'https://www.asterank.com/api/skymorph/search',
+                    ['target' => $target]
+                );
 
             if ($response->failed()) {
                 return response()->json([

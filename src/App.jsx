@@ -43,6 +43,12 @@ function App() {
   }, []);
 
   const loadFavorites = async () => {
+    // Only load favorites if user is logged in
+    if (!user && !localStorage.getItem("auth_token")) {
+      setFavorites([]);
+      return;
+    }
+    
     try {
       const response = await apiService.getFavorites();
       if (response.success) {
