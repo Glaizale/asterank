@@ -219,7 +219,7 @@ function LandingPage({ onShowLogin, onShowSignup }) {
               backgroundClip: "text",
             }}
           >
-            asterank
+            Asterank
           </h1>
           <p
             className="text-2xl text-white mb-12 leading-relaxed font-light"
